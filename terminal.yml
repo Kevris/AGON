@@ -1,0 +1,70 @@
+theme: github-dark
+
+window:
+  title: "agon / domain console"
+  style: "minimal"
+  borderRadius: 14
+  width: 980
+  autoHeight: true
+  minHeight: 360
+  maxHeight: 520
+
+terminal:
+  prompt: "agon> "
+  fontSize: 15
+  lineHeight: 1.55
+  padding: 26
+
+effects:
+  textGlow: false
+  scanlines: false
+  vignette: false
+  shadow: true
+
+animation:
+  loop: true
+  defaultTypingDuration: 900
+  commandOutputPause: 750
+  outputLineStagger: 85
+  outputEndPause: 1300
+
+accessibility:
+  describe: true
+
+blocks:
+  - block: custom
+    config:
+      command: "inspect competition"
+      lines:
+        - "[[fg:#58A6FF]]AGON / DOMAIN[[/fg]]"
+        - ""
+        - "League"
+        - "  └─ Modality"
+        - "      └─ Season"
+        - "          ├─ Team → Participant → Player"
+        - "          └─ Competition"
+        - ""
+        - "[[fg:#3FB950]]✓ model loaded[[/fg]]"
+
+  - block: custom
+    config:
+      command: "inspect tie"
+      lines:
+        - "[[fg:#58A6FF]]TIE STATE[[/fg]]"
+        - "status      = first_leg_done"
+        - "next        = second_leg"
+        - "winner      = unresolved"
+        - "resolution  = pending"
+        - ""
+        - "[[fg:#3FB950]]✓ one source of truth[[/fg]]"
+
+  - block: custom
+    config:
+      command: "inspect match-events"
+      lines:
+        - "[[fg:#58A6FF]]MATCH EVENT LEDGER[[/fg]]"
+        - "event       → append"
+        - "correction  → event_reverted"
+        - "target      → preserved"
+        - ""
+        - "[[fg:#3FB950]]✓ history remains reconstructible[[/fg]]"

@@ -1,0 +1,133 @@
+name: Refresh README assets
+
+on:
+  schedule:
+    - cron: "17 12 * * 1"
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Count commits
+        shell: bash
+        run: echo "COMMITS=$(git rev-list --count HEAD)" >> "$GITHUB_ENV"
+
+      - name: Generate project pulse
+        uses: actions/github-script@v9
+        env:
+          COMMITS: ${{ env.COMMITS }}
+        with:
+          script: |
+            const fs = require('fs');
+
+            const repo = await github.rest.repos.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+
+            const issueSearch = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${context.repo.owner}/${context.repo.repo} is:open is:issue`,
+              per_page: 1
+            });
+
+            const prSearch = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${context.repo.owner}/${context.repo.repo} is:open is:pr`,
+              per_page: 1
+            });
+
+            const values = {
+              commits: process.env.COMMITS,
+              stars: repo.data.stargazers_count,
+              issues: issueSearch.data.total_count,
+              prs: prSearch.data.total_count,
+              refreshed: new Date().toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                timeZone: 'UTC'
+              })
+            };
+
+            const esc = (value) => String(value)
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;');
+
+            const makeSvg = (theme) => {
+              const dark = theme === 'dark';
+              const bg = dark ? '#0D1117' : '#F6F8FA';
+              const panel = dark ? '#161B22' : '#FFFFFF';
+              const border = dark ? '#30363D' : '#D0D7DE';
+              const text = dark ? '#E6EDF3' : '#24292F';
+              const muted = dark ? '#8B949E' : '#57606A';
+              const accent = dark ? '#58A6FF' : '#0969DA';
+              const good = dark ? '#3FB950' : '#1A7F37';
+
+              return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
+              <title id="title">AGON project pulse</title>
+              <desc id="desc">Repository activity summary for AGON, refreshed automatically by GitHub Actions.</desc>
+              <rect width="1200" height="300" rx="20" fill="${bg}"/>
+              <rect x="1" y="1" width="1198" height="298" rx="19" fill="none" stroke="${border}"/>
+              <text x="40" y="45" font-family="DejaVu Sans, Arial" font-size="16" fill="${muted}">AGON / PROJECT PULSE</text>
+              <text x="40" y="78" font-family="DejaVu Sans, Arial" font-size="28" font-weight="700" fill="${text}">Repository state, generated automatically.</text>
+
+              <g font-family="DejaVu Sans, Arial">
+                <rect x="40" y="115" width="250" height="105" rx="16" fill="${panel}" stroke="${border}"/>
+                <text x="60" y="146" font-size="14" fill="${muted}">COMMITS</text>
+                <text x="60" y="191" font-size="36" font-weight="700" fill="${accent}">${esc(values.commits)}</text>
+
+                <rect x="315" y="115" width="250" height="105" rx="16" fill="${panel}" stroke="${border}"/>
+                <text x="335" y="146" font-size="14" fill="${muted}">STARS</text>
+                <text x="335" y="191" font-size="36" font-weight="700" fill="${accent}">${esc(values.stars)}</text>
+
+                <rect x="590" y="115" width="250" height="105" rx="16" fill="${panel}" stroke="${border}"/>
+                <text x="610" y="146" font-size="14" fill="${muted}">OPEN ISSUES</text>
+                <text x="610" y="191" font-size="36" font-weight="700" fill="${accent}">${esc(values.issues)}</text>
+
+                <rect x="865" y="115" width="295" height="105" rx="16" fill="${panel}" stroke="${border}"/>
+                <text x="885" y="146" font-size="14" fill="${muted}">OPEN PRs</text>
+                <text x="885" y="191" font-size="36" font-weight="700" fill="${accent}">${esc(values.prs)}</text>
+              </g>
+
+              <text x="40" y="258" font-family="DejaVu Sans, Arial" font-size="14" fill="${muted}">REFRESHED</text>
+              <text x="130" y="258" font-family="DejaVu Sans, Arial" font-size="14" font-weight="700" fill="${good}">${esc(values.refreshed)}</text>
+              <text x="925" y="258" font-family="DejaVu Sans, Arial" font-size="14" fill="${muted}">Kevris / AGON</text>
+              </svg>`;
+            };
+
+            fs.writeFileSync('assets/agon-pulse-dark.svg', makeSvg('dark'));
+            fs.writeFileSync('assets/agon-pulse-light.svg', makeSvg('light'));
+
+      - name: Generate animated domain console
+        uses: williamzujkowski/svg-terminal@v1
+        with:
+          config: terminal.yml
+          output: assets/agon-console.svg
+          commit: false
+
+      - name: Publish generated assets
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add assets/agon-pulse-dark.svg assets/agon-pulse-light.svg assets/agon-console.svg
+
+          if git diff --cached --quiet; then
+            echo "No README asset changes."
+            exit 0
+          fi
+
+          git commit -m "chore(readme): refresh generated assets"
+          git push

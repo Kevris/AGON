@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="380" viewBox="0 0 1400 380" role="img" aria-labelledby="title desc">
+<title id="title">AGON — Haxball league system</title>
+<desc id="desc">AGON, a system for managing Haxball leagues, centered around a domain model and Discord bot.</desc>
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0%" stop-color="#F6F8FA"/>
+    <stop offset="100%" stop-color="#EEF3F8"/>
+  </linearGradient>
+  <linearGradient id="glow" x1="0" y1="0" x2="1" y2="0">
+    <stop offset="0%" stop-color="#0969DA" stop-opacity="0"/>
+    <stop offset="45%" stop-color="#0969DA" stop-opacity=".75"/>
+    <stop offset="100%" stop-color="#0969DA" stop-opacity="0"/>
+  </linearGradient>
+  <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+    <path d="M48 0H0V48" fill="none" stroke="#0969DA" stroke-opacity=".055"/>
+  </pattern>
+</defs>
+
+<rect width="1400" height="380" rx="26" fill="url(#bg)"/>
+<rect x="1" y="1" width="1398" height="378" rx="25" fill="url(#grid)" stroke="#D0D7DE"/>
+
+<g fill="none" stroke="#0969DA" stroke-opacity=".16">
+  <path d="M965 55h315M965 325h315"/>
+  <path d="M1040 85v210M1190 85v210"/>
+  <circle cx="1115" cy="190" r="55"/>
+  <circle cx="1115" cy="190" r="9" fill="#0969DA" stroke="none" opacity=".75"/>
+  <path d="M965 135h75M1165 135h75M965 245h75M1165 245h75"/>
+</g>
+
+<path d="M90 295H810" stroke="url(#glow)" stroke-width="2"/>
+
+<text x="90" y="130" fill="#0969DA" font-family="DejaVu Sans, Arial" font-weight="700" font-size="74" letter-spacing="10">AGON</text>
+<text x="94" y="171" fill="#24292F" font-family="DejaVu Sans, Arial" font-size="20" letter-spacing="3">ἀγών · EL CERTAMEN</text>
+<text x="94" y="220" fill="#57606A" font-family="DejaVu Sans, Arial" font-size="19">Haxball league administration, modeled from the domain out.</text>
+<text x="94" y="250" fill="#57606A" font-family="DejaVu Sans, Arial" font-size="19">Discord is the client. The competition model is the system.</text>
+
+<g font-family="DejaVu Sans, Arial" font-size="14">
+  <text x="985" y="105" fill="#57606A">LEAGUE</text>
+  <text x="985" y="155" fill="#24292F" font-weight="700">COMPETITION</text>
+  <text x="1165" y="155" fill="#24292F" font-weight="700">TIE</text>
+  <text x="985" y="225" fill="#24292F" font-weight="700">MATCH</text>
+  <text x="1165" y="225" fill="#24292F" font-weight="700">EVENT</text>
+  <text x="985" y="275" fill="#0969DA">DOMAIN FIRST</text>
+</g>
+</svg>

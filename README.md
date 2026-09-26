@@ -1,395 +1,281 @@
 <a id="readme-top"></a>
 
 <p align="center">
-  <img
-    src="https://capsule-render.vercel.app/api?type=waving&color=0:0D1117,100:161B22&height=235&section=header&text=AGON&fontSize=86&fontColor=58A6FF&fontAlignY=38&desc=%E1%BC%80%CE%B3%CF%8E%CE%BD%20%C2%B7%20el%20certamen&descAlignY=59&descSize=20&animation=fadeIn"
-    width="100%"
-    alt="AGON"
-  />
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/agon-hero-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/agon-hero-light.svg">
+    <img src="assets/agon-hero-dark.svg" width="100%" alt="AGON — sistema de administración de ligas de Haxball">
+  </picture>
 </p>
 
 <p align="center">
   <img
-    src="https://readme-typing-svg.demolab.com?font=Inter&weight=600&size=22&duration=3200&pause=900&color=58A6FF&center=true&vCenter=true&width=760&lines=Plataforma+para+gestionar+ligas+de+Haxball;Un+solo+bot.+Un+solo+proceso.;Del+modelo+al+dominio%2C+y+despu%C3%A9s+al+bot;Construido+para+durar%2C+dise%C3%B1ado+para+cambiar"
-    alt="Typing animation"
+    src="https://readme-typing-svg.demolab.com?font=Inter&weight=600&size=21&duration=3200&pause=850&color=58A6FF&center=true&vCenter=true&width=760&lines=Plataforma+para+gestionar+ligas+de+Haxball;Un+solo+bot.+Un+solo+proceso.;Del+modelo+al+dominio%2C+y+despu%C3%A9s+al+bot;Construido+para+durar%2C+dise%C3%B1ado+para+cambiar"
+    alt="AGON typing animation"
   />
 </p>
 
 <p align="center">
-  <img src="https://skillicons.dev/icons?i=ts,nodejs,prisma,postgres,discordjs,vitest,git,github,vscode&perline=9" alt="Stack de AGON"/>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript"/>
-  <img src="https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white" alt="Prisma"/>
-  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white" alt="PostgreSQL"/>
-  <img src="https://img.shields.io/badge/discord.js-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="discord.js"/>
-</p>
-
-<p align="center">
+  <a href="https://agon-sooty-two.vercel.app/">
+    <img src="https://img.shields.io/badge/Web%20preview-agon--web-161B22?style=for-the-badge&logo=vercel&logoColor=white" alt="Web preview"/>
+  </a>
+  <a href="https://github.com/Kevris/AGON/actions/workflows/readme-assets.yml">
+    <img src="https://github.com/Kevris/AGON/actions/workflows/readme-assets.yml/badge.svg" alt="README assets workflow"/>
+  </a>
   <img src="https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge" alt="MIT"/>
-  <img src="https://img.shields.io/badge/Status-Design%20%26%20Schema-f59e0b?style=for-the-badge" alt="Estado"/>
-  <img src="https://img.shields.io/badge/Project-Kevris-161B22?style=for-the-badge&logo=github&logoColor=white" alt="Proyecto"/>
 </p>
 
-<br>
+<p align="center">
+  <img src="https://skillicons.dev/icons?i=ts,nodejs,prisma,postgres,discordjs,vitest,git,github,vscode&perline=9" alt="AGON tech stack"/>
+</p>
+
+---
 
 > **Construido para durar, diseñado para cambiar.**
 
-AGON nace de una necesidad bastante concreta: administrar una liga de Haxball sin tener la misma
-información repartida entre comandos, mensajes, hojas y cálculos distintos.
+AGON existe para resolver una cosa bastante concreta:
 
-Inscripciones, plantillas, fichajes, competencias, brackets, actas y estadísticas viven dentro del
-mismo sistema.
+**administrar una liga de Haxball sin tener que reconstruir su estado cada vez que alguien pregunta qué está pasando.**
 
-Hoy el cliente es un bot de Discord. El resto está pensado para que no tenga que quedarse ahí.
+Jugadores, plantillas, fichajes, competencias, fixtures, cruces, actas y estadísticas forman parte del mismo modelo.
 
-<p align="center">
-  <img src="./assets/agon-architecture.gif" width="100%" alt="Flujo animado de la arquitectura de AGON"/>
-</p>
+Hoy Discord es la interfaz.
 
-<p align="center">
-  <sub>Discord → dominio → persistencia. Sin una segunda implementación de las reglas.</sub>
-</p>
+El dominio es el sistema.
 
 ---
 
-## ⚡ Lo importante
+## 🧭 AGON en 30 segundos
+
+```text
+                         LEAGUE
+                            │
+                         MODALITY
+                            │
+                          SEASON
+                     ┌──────┴──────┐
+                    TEAM       COMPETITION
+                     │          ┌───┴────┐
+               PARTICIPANT    MATCH    TIE
+                     │          │        │
+                   PLAYER    MATCHEVENT  MATCH
+                                  │
+                           STAT PROJECTION
+```
+
+La separación importa porque cada objeto responde una pregunta distinta.
+
+| Pregunta | Dueño |
+|---|---|
+| ¿Qué liga está usando este servidor? | `League.discordGuildId` |
+| ¿En qué equipo participa este jugador esta temporada? | `Participant` |
+| ¿Qué partido ocurrió? | `Match` |
+| ¿Qué pasó dentro del partido? | `MatchEvent` |
+| ¿Qué toca ahora en el cruce? | `Tie` |
+| ¿Qué estadísticas se derivan del acta? | `PlayerStatProjection` |
+
+---
+
+## ⚡ Lo que hace
 
 <table align="center">
   <tr>
-    <td align="center" width="25%">
-      <strong>🏛️ Multi-liga</strong><br>
-      <sub>La liga se resuelve por <code>interaction.guild.id</code>.</sub>
-    </td>
-    <td align="center" width="25%">
-      <strong>🧠 Dominio separado</strong><br>
-      <sub><code>src/domain/</code> no conoce Discord.</sub>
-    </td>
-    <td align="center" width="25%">
-      <strong>⚔️ Cruces con estado</strong><br>
-      <sub><code>Tie</code> es el dueño del enfrentamiento.</sub>
-    </td>
-    <td align="center" width="25%">
-      <strong>📜 Actas inmutables</strong><br>
-      <sub>Las correcciones no borran historia.</sub>
-    </td>
-  </tr>
-</table>
-
-<br>
-
-<details>
-<summary><strong>📖 Tabla de contenidos</strong></summary>
-
-<br>
-
-- [🏛️ Qué es AGON](#️-qué-es-agon)
-- [🎯 Qué cubre](#-qué-cubre)
-- [🔄 Cómo funciona](#-cómo-funciona)
-- [⚔️ El problema de Tie](#️-el-problema-de-tie)
-- [📐 Arquitectura](#-arquitectura)
-- [🗄️ Modelo de datos](#️-modelo-de-datos)
-- [⚙️ Stack técnico](#️-stack-técnico)
-- [🧠 Principios de diseño](#-principios-de-diseño)
-- [📊 Estado del proyecto](#-estado-del-proyecto)
-- [🗺️ Roadmap](#️-roadmap)
-- [🚀 Desarrollo local](#-desarrollo-local)
-- [📄 Licencia](#-licencia)
-
-</details>
-
----
-
-## 🏛️ Qué es AGON
-
-AGON es un sistema para administrar ligas de Haxball. Cubre el ciclo completo: inscripción de jugadores,
-formación de plantillas, ventanas de fichajes con ofertas y vencimientos, competencias en formato liga
-o copa, cruces de eliminatoria a ida y vuelta, carga de actas partido a partido y estadísticas históricas.
-
-Está construido **multi-liga desde el modelo**. Hoy existe una sola liga, pero una segunda no requiere
-duplicar el sistema: basta con registrar otra liga y asociar el bot al servidor correspondiente.
-
-La identidad del jugador vive en Discord.
-
-AGON toma del fútbol real las ideas que ayudan a representar una competición —club, plantilla,
-temporada, liga, copa, ida y vuelta— y deja fuera lo que no tiene sentido aquí.
-
-No hay estadios ni árbitros con carnet.
-
----
-
-## 🎯 Qué cubre
-
-<table>
-  <tr>
-    <td width="33%" align="center">
+    <td align="center" width="33%">
       <strong>👤 Jugadores</strong><br>
-      <sub>Inscripción, perfiles, plantillas y participación por temporada.</sub>
+      <sub>Inscripción, perfiles y participación histórica.</sub>
     </td>
-    <td width="33%" align="center">
-      <strong>🔁 Mercado</strong><br>
-      <sub>Ofertas, vencimientos y cambios de equipo con estado persistente.</sub>
+    <td align="center" width="33%">
+      <strong>🔁 Fichajes</strong><br>
+      <sub>Ofertas, vencimientos y estados persistentes.</sub>
     </td>
-    <td width="33%" align="center">
+    <td align="center" width="33%">
       <strong>🏆 Competencias</strong><br>
       <sub>Ligas, copas, divisiones, grupos y seeds.</sub>
     </td>
   </tr>
   <tr>
-    <td width="33%" align="center">
+    <td align="center">
       <strong>📅 Fixtures</strong><br>
-      <sub>Generación de jornadas y partidos desde el dominio.</sub>
+      <sub>Generación desde el dominio.</sub>
     </td>
-    <td width="33%" align="center">
+    <td align="center">
       <strong>⚔️ Eliminatorias</strong><br>
-      <sub>Cruces, ida y vuelta, ganador y resolución.</sub>
+      <sub>Partido único o ida y vuelta.</sub>
     </td>
-    <td width="33%" align="center">
-      <strong>📊 Estadísticas</strong><br>
-      <sub>Actas, proyecciones, ajustes, premios e historial.</sub>
+    <td align="center">
+      <strong>📊 Historial</strong><br>
+      <sub>Actas, estadísticas, premios y auditoría.</sub>
     </td>
   </tr>
 </table>
 
 ---
 
-## 🔄 Cómo funciona
+## 🧬 La parte que importa
 
-El bot de Discord es el único cliente de esta versión.
+Hay tres decisiones que terminan explicando casi todo AGON.
 
-Los comandos de staff configuran la liga, equipos, mercado y competencias.
-Los comandos de jugadores y directores técnicos sirven para consultar perfiles, tablas,
-historial y estado de los cruces.
-
-La lógica de negocio vive aparte:
+### 01 · Discord no es el dominio
 
 ```text
-src/bot/      → Discord.js
-      │
-      ▼
-src/domain/   → reglas de la competición
-      │
-      ▼
-src/db/       → Prisma
-      │
-      ▼
+Discord
+   │
+   ▼
+src/bot/
+   │
+   ▼
+src/domain/
+   │
+   ▼
+src/db/
+   │
+   ▼
 PostgreSQL
 ```
 
-El bot llama al dominio directamente, dentro del mismo proceso.
+`src/domain/` no importa `discord.js`.
 
-No hay HTTP de por medio porque hoy no hace falta.
+El bot es una interfaz que llama al dominio dentro del mismo proceso.
 
-> [!TIP]
-> El módulo `src/domain/` no importa `discord.js`. Se puede probar sin levantar el bot y,
-> cuando exista otro cliente, ese cliente puede utilizar las mismas reglas.
-
-### Una liga, resuelta por el servidor
-
-La liga no está fijada en un `config.ts`.
-
-El bot mira:
-
-```ts
-interaction.guild.id
-        ↓
-League.discordGuildId
-        ↓
-liga correspondiente
-```
-
-Eso permite que el mismo código pueda trabajar con más de una liga sin cambiar su lógica.
+Eso deja la puerta abierta a otro cliente sin tener que duplicar las reglas.
 
 ---
 
-## ⚔️ El problema de Tie
+### 02 · Un `Tie` tiene que ser una cosa real
 
-Esta parte existe porque antes el sistema fallaba exactamente aquí.
+Antes, el cruce de una eliminatoria se reconstruía a partir de partidos.
 
-El cruce de eliminatoria no era una entidad real.
-Se reconstruía desde partidos sueltos cada vez que alguna parte del bot necesitaba saber qué estaba pasando.
-
-Eso acabó produciendo:
+Eso produjo tres problemas:
 
 ```text
-BRACKET VACÍO
-    ↓
-la generación no encontraba un cruce concreto
-
-VUELTA ANTES QUE IDA
-    ↓
-"¿terminó la ida?" se volvía a calcular
-
-RONDA EQUIVOCADA
-    ↓
-otra parte interpretaba los mismos partidos de otra forma
+bracket vacío
+     ↓
+vuelta antes que ida
+     ↓
+ronda equivocada
 ```
 
-Tres síntomas.
+No eran tres problemas distintos.
 
-Una causa:
+El problema era que **nadie era dueño del estado del cruce**.
 
-> **nadie era dueño del estado del cruce.**
-
-La solución fue convertir `Tie` en una fila real de la base de datos.
+Ahora:
 
 ```text
 Tie
-│
-├── id
-├── competitionId
 ├── round
 ├── teamAId
 ├── teamBId
-│
 ├── status
-│   ├── pending
-│   ├── first_leg_done
-│   └── resolved
-│
 ├── winnerTeamId
 └── resolution
-    ├── normal
-    ├── walkover
-    └── manual
+```
+
+y el estado puede ser:
+
+```text
+pending
+   ↓
+first_leg_done
+   ↓
+resolved
 ```
 
 <p align="center">
-  <img src="./assets/agon-tie-lifecycle.gif" width="100%" alt="Ciclo de vida animado de Tie"/>
+  <img src="assets/agon-match-pipeline.gif" width="100%" alt="Pipeline animado del partido de AGON"/>
 </p>
 
 <p align="center">
-  <sub><code>pending</code> → <code>first_leg_done</code> → <code>resolved</code></sub>
+  <sub>Un partido produce eventos; los eventos alimentan el estado que el resto del sistema consulta.</sub>
 </p>
 
-A partir de ahí, el bracket, el siguiente partido y el avance de ronda consultan el mismo estado.
+---
 
-Ya no lo recalculan cada uno por su cuenta.
+### 03 · Corregir no significa borrar
 
-### El ciclo de un cruce
+`MatchEvent` es el acta.
+
+Cuando algo debe corregirse, la fila original no desaparece.
+
+```text
+event #41
+   │
+   └── event_reverted → targetEventId: 41
+```
+
+Así el historial sigue siendo reconstruible y la corrección queda registrada.
+
+---
+
+## ⚔️ El ciclo de un cruce
+
+```mermaid
+stateDiagram-v2
+    [*] --> pending
+
+    pending --> first_leg_done: ida confirmada
+    first_leg_done --> resolved: vuelta + agregado
+
+    pending --> resolved: partido único
+    pending --> resolved: walkover
+    pending --> resolved: manual
+
+    resolved --> [*]
+```
+
+La pregunta:
+
+> **"¿Qué toca ahora?"**
+
+no se responde mirando tres tablas y esperando que coincidan.
+
+Se consulta `Tie`.
+
+---
+
+## 🔌 Cómo una interacción llega al dato
 
 ```mermaid
 sequenceDiagram
-    participant S as Staff
-    participant B as Bot
-    participant D as Dominio
+    participant U as Usuario
+    participant B as Discord Bot
+    participant D as Domain
     participant DB as Prisma
-    participant T as Tie
+    participant P as PostgreSQL
 
-    S->>B: generar bracket
-    B->>D: generateKnockoutBracket(competitionId)
-    D->>DB: crear Tie
-    DB-->>D: Tie[] · pending
-    D-->>B: bracket listo
-    B-->>S: cruces
-
-    Note over S,T: Se juega la ida
-
-    S->>B: confirmar ida
-    B->>D: updateTieFromMatch(matchId)
-    D->>DB: insertar MatchEvent
-    D->>DB: Tie.status = first_leg_done
-    DB-->>D: OK
-    D-->>B: falta la vuelta
-
-    Note over S,T: Se juega la vuelta
-
-    S->>B: confirmar vuelta
-    B->>D: updateTieFromMatch(matchId)
-    D->>D: calcular agregado
-    D->>DB: Tie.status = resolved
-    D->>DB: Tie.winnerTeamId
-    D->>DB: Tie.resolution
-    DB-->>D: OK
-    D-->>B: cruce resuelto
+    U->>B: interacción
+    B->>D: operación de dominio
+    D->>DB: consulta / mutación
+    DB->>P: SQL
+    P-->>DB: resultado
+    DB-->>D: datos
+    D-->>B: resultado
+    B-->>U: respuesta
 ```
 
-> [!IMPORTANT]
-> `Match` representa el partido.
-> `Tie` representa el enfrentamiento.
-> El partido registra lo que pasó; el cruce decide quién sigue.
+No hay HTTP entre el bot y el dominio.
+
+Por ahora tampoco hace falta.
 
 ---
 
-## 📐 Arquitectura
+## 🖥️ El proyecto también tiene una consola
 
-La estructura actual está pensada alrededor de tres responsabilidades claras:
+Esto no intenta simular el bot.
 
-```text
-agon/
-│
-├── src/
-│   ├── bot/       Discord.js — comandos y eventos
-│   │
-│   ├── domain/    lógica pura
-│   │              ├── fixtures
-│   │              ├── tablas
-│   │              ├── cruces
-│   │              └── transferencias
-│   │
-│   └── db/        Prisma y queries de lectura reutilizables
-│
-├── prisma/
-│   └── schema.prisma
-│
-├── tests/
-│   └── Vitest sobre src/domain
-│
-└── package.json
-```
+Es una forma visual de enseñar el modelo y las transiciones que hacen interesante a AGON.
 
-El principio es sencillo:
+<p align="center">
+  <img src="assets/agon-console.svg" width="96%" alt="Consola animada del dominio de AGON"/>
+</p>
 
-```text
-        DISCORD
-           │
-           ▼
-        DOMAIN
-           │
-           ▼
-        PRISMA
-           │
-           ▼
-      POSTGRESQL
-```
-
-Un solo proceso.
-
-Sin microservicios porque, por ahora, no hay un segundo cliente que los justifique.
-
-### ¿Y una web?
-
-La arquitectura no la bloquea.
-
-Cuando exista una web con sesiones propias hay dos caminos razonables:
-
-```text
-Opción A
-Discord ─────┐
-             ├── src/domain/ ─── PostgreSQL
-Web ─────────┘
-
-Opción B
-
-Discord ─── src/domain/
-Web ─────── API ───── src/domain/
-```
-
-La decisión se toma cuando exista realmente ese segundo cliente.
-
-No antes.
-
-> [!IMPORTANT]
-> La versión anterior comenzó por autenticación multi-cliente, API separada y otras piezas
-> de infraestructura antes de tener una feature visible. AGON cambia el orden:
-> **modelo → dominio → cliente real → infraestructura adicional cuando haga falta.**
+<p align="center">
+  <sub>Generado desde <code>terminal.yml</code> mediante GitHub Actions.</sub>
+</p>
 
 ---
 
-## 🗄️ Modelo de datos
-
-La jerarquía central del sistema es:
+## 📐 Modelo de datos
 
 ```mermaid
 erDiagram
@@ -409,29 +295,29 @@ erDiagram
     MatchEvent }o--|| Participant : atribuye
 ```
 
-### Entidades
+### Entidades principales
 
-| Modelo | Propósito |
+| Modelo | Responsabilidad |
 |---|---|
-| `League` | Techo del sistema. `slug` + `discordGuildId`. |
-| `Modality` | Variante del juego: Futsal x4, Real Soccer. |
-| `Season` | Temporada. Una activa por modalidad. |
+| `League` | Liga y vínculo con el servidor de Discord. |
+| `Modality` | Variante del juego. |
+| `Season` | Temporada por modalidad. |
 | `Team` | Club persistente entre temporadas. |
-| `Player` | Identidad. `discordId` único. |
-| `Participant` | Ficha de la identidad en modalidad + temporada. |
-| `Competition` | Competencia; `format` y `tier` distinguen su estructura. |
-| `CompetitionParticipant` | Equipos inscritos, grupo y seed. |
-| `Tie` | Cruce de eliminatoria y su estado. |
+| `Player` | Identidad del jugador. |
+| `Participant` | Participación de esa identidad en una temporada/modalidad. |
+| `Competition` | Liga o copa y su estructura. |
+| `CompetitionParticipant` | Inscripción, grupo y seed. |
+| `Tie` | Estado del enfrentamiento. |
 | `Match` | Partido individual. |
 | `MatchEvent` | Acta inmutable. |
-| `PlayerStatProjection` | Totales agregados desde los eventos. |
+| `PlayerStatProjection` | Totales derivados de eventos. |
 | `ManualStatAdjustment` | Corrección manual con responsable y motivo. |
 | `Award` | Premio de temporada o competencia. |
-| `AwardWinner` | Ganador de un premio individual. |
+| `AwardWinner` | Ganador de un premio. |
 | `CompetitionChampionRoster` | Snapshot del plantel campeón. |
 | `TransferOffer` | Oferta de fichaje. |
 | `TransferOfferStatus` | `pending / accepted / rejected / cancelled / expired`. |
-| `AuditLog` | Registro de mutaciones: actor, acción, antes/después. |
+| `AuditLog` | Mutaciones auditables. |
 | `Position` | `GK / DEF / MID / DFWD / FWD / N/A`. |
 
 <details>
@@ -441,7 +327,7 @@ erDiagram
 
 `Player` es la identidad.
 
-`Participant` es esa identidad dentro de una modalidad y temporada concreta.
+`Participant` es esa identidad dentro de una modalidad y temporada.
 
 ```text
 Player
@@ -451,241 +337,309 @@ Player
   └── Season B → Participant → Team Y
 ```
 
-Así la historia competitiva no depende de sobrescribir al jugador original.
+Así la identidad no necesita cambiar de significado cada temporada.
 
 </details>
 
 <details>
-<summary><strong>📜 MatchEvent es inmutable</strong></summary>
+<summary><strong>📜 MatchEvent y el historial</strong></summary>
 
 <br>
-
-Corregir un gol no significa borrar la fila original.
-
-La corrección se registra como un nuevo evento:
 
 ```text
-event_reverted → targetEventId
+Match
+  └── MatchEvent[]
+         │
+         ├── event
+         ├── event
+         └── event_reverted → targetEventId
 ```
 
-De esa forma, el acta original sigue formando parte de la historia y el estado actual puede reconstruirse.
+El estado actual puede derivarse sin destruir el registro original.
 
 </details>
 
 <details>
-<summary><strong>⚙️ Las reglas de Competition.settings</strong></summary>
+<summary><strong>⚙️ Competition.settings</strong></summary>
 
 <br>
 
-Las reglas propias de una competición viven como datos:
+Las reglas específicas de una competición pueden vivir como datos:
 
 ```text
 wildcards
 tiempo de espera
-diferencia para walkover
+walkover
 puntos
-criterios de desempate
+desempates
 ```
 
-Si una competición necesita una regla diferente, no hace falta convertirla en una constante global del bot.
+La intención es evitar constantes globales cuando la regla pertenece al torneo.
 
 </details>
 
 ---
 
-## 🧩 Un detalle importante del modelo
+## 🏛️ Multi-liga desde el modelo
 
-AGON intenta distinguir cosas que en un bot pequeño suelen terminar mezcladas:
+AGON no usa un ID de liga fijo en el bot.
 
-```text
-PLAYER
-  │
-  ▼
-PARTICIPANT
-  │
-  ▼
-TEAM
-  │
-  ▼
-SEASON
-  │
-  ▼
-COMPETITION
-  │
-  ├── MATCH
-  │     └── MATCHEVENT
-  │
-  └── TIE
-        └── MATCH
+```ts
+interaction.guild.id
+        ↓
+League.discordGuildId
+        ↓
+League
 ```
 
-`Team` es el club.
+La misma base puede representar más de una liga.
 
-`Participant` es la participación histórica de un jugador.
-
-`Match` es una unidad jugable.
-
-`Tie` es la unidad competitiva del cruce.
-
-`MatchEvent` es lo que ocurrió dentro del partido.
-
-Separarlos hace que las reglas tengan un lugar bastante más claro.
+Hoy existe una sola liga real en el diseño; la abstracción está puesta desde la primera relación.
 
 ---
 
-## ⚙️ Stack técnico
+## 🧠 Algunas reglas que AGON intenta no romper
+
+```text
+01  Una liga se resuelve por el servidor donde ocurre la interacción.
+
+02  Un Team no deja de existir porque termine una temporada.
+
+03  Un Participant pertenece a una modalidad y temporada concretas.
+
+04  Un Match no decide quién gana una eliminatoria.
+    El Tie lo decide.
+
+05  Un MatchEvent corregido no desaparece del historial.
+
+06  Una regla específica de una Competition no debería
+    convertirse en una constante global por comodidad.
+```
+
+Estas reglas son más importantes que cualquier framework del stack.
+
+---
+
+## 🧱 Arquitectura
+
+```text
+agon/
+│
+├── src/
+│   ├── bot/
+│   │
+│   ├── domain/
+│   │
+│   └── db/
+│
+├── prisma/
+│   └── schema.prisma
+│
+├── tests/
+│
+├── agon-web/
+│
+├── assets/
+│
+└── .github/
+    └── workflows/
+```
+
+La idea es que el flujo conceptual sea tan simple como:
+
+```text
+Discord
+   │
+   ▼
+Domain
+   │
+   ▼
+Database
+```
+
+La arquitectura no intenta anticipar una empresa de diez servicios.
+
+Intenta resolver bien una liga real.
+
+---
+
+## ⚙️ Stack
 
 <p align="center">
   <img src="https://skillicons.dev/icons?i=ts,nodejs,prisma,postgres,discordjs,vitest,git,github,vscode&perline=9" alt="Stack de AGON"/>
 </p>
 
-| Componente | Tecnología | Motivo |
-|---|---|---|
-| Lenguaje | TypeScript | Un solo lenguaje para dominio, bot y acceso a datos. |
-| Runtime | Node.js | Un solo proceso para esta versión. |
-| Bot | discord.js | Cliente actual de Discord. |
-| ORM | Prisma | Tipado, schema y migraciones versionadas. |
-| Base de datos | PostgreSQL | Persistencia principal. |
-| Tests | Vitest | Pruebas sobre el dominio sin levantar Discord. |
-| Hosting | VPS pequeño / host de bots | Un proceso Node, sin Docker por ahora. |
+| Componente | Tecnología |
+|---|---|
+| Lenguaje | TypeScript |
+| Runtime | Node.js |
+| Bot | discord.js |
+| ORM | Prisma |
+| Base de datos | PostgreSQL |
+| Tests | Vitest |
+| Control de versiones | Git + GitHub |
+| Web | `agon-web` |
+| Hosting previsto | VPS pequeño / host de bots |
 
 ---
 
-## 🧠 Principios de diseño
+## 📡 Estado del proyecto
 
-**Dominio separado de las integraciones.**
+<table>
+  <tr>
+    <td align="center"><strong>SCHEMA</strong><br>✅ Completo</td>
+    <td align="center"><strong>DOMAIN</strong><br>✅ Completo</td>
+    <td align="center"><strong>TIE</strong><br>✅ Completo</td>
+    <td align="center"><strong>BOT</strong><br>🟡 En desarrollo</td>
+  </tr>
+</table>
 
-La lógica de brackets, tablas y transferencias no debería saber que existe Discord.
+```text
+FOUNDATION
+████████████████████████████████████  done
 
-**Una pregunta, un dueño.**
+DOMAIN
+████████████████████████████████████  done
 
-Si varias partes necesitan saber qué ocurre en un cruce, no deberían resolverlo de tres maneras diferentes.
+BOT
+██████████████░░░░░░░░░░░░░░░░░░░░░  building
 
-**Reglas como datos.**
+WEB
+██████████░░░░░░░░░░░░░░░░░░░░░░░░░  exploring
+```
 
-Las reglas que pertenecen a una competición deberían poder vivir en la competición.
-
-**Historia sin sobrescritura.**
-
-Lo que ocurrió en un partido debe poder reconstruirse.
-
-**Multi-liga desde el modelo.**
-
-`League` está arriba desde el principio; no se agrega después como un parche.
-
-**Diseñar para cambiar.**
-
-El propio `Tie` es el ejemplo: no apareció porque quedara bonito en el schema.
-Apareció porque una copa real necesitó un dueño para su estado.
-
----
-
-## 📊 Estado del proyecto
-
-| Componente | Estado | Notas |
-|---|:---:|---|
-| Schema v1 | ✅ Completo | Liga, modalidad, temporada, equipo, jugador, competencia, cruce, partido, eventos, mercado y auditoría. |
-| Dominio puro | ✅ Completo | Fixtures round-robin y eliminatoria, tablas y avance de cruces. |
-| Entidad `Tie` | ✅ Completa | Estado explícito del cruce. |
-| Eventos inmutables | ✅ Completo | Correcciones mediante `event_reverted`. |
-| Mercado | ✅ Completo | Máquina de estados de transferencias. |
-| Bot de Discord | 🟡 En desarrollo | Comandos de staff, jugadores y directores técnicos. |
-| Web | ⏸️ Pospuesta | Se construye cuando haya datos reales que mostrar. |
-
-> [!NOTE]
-> El proyecto sigue en fase de diseño y primeros borradores.
-> El schema de datos está completo y validado; el siguiente paso es convertir ese modelo en el primer corte operativo del bot.
+El schema de datos y el dominio son la base terminada de esta etapa; el bot es el siguiente corte operativo.
 
 ---
 
 ## 🗺️ Roadmap
 
-```text
-FOUNDATION
-├── [x] Modelo de dominio completo en Prisma
-├── [x] Entidad Tie
-├── [x] Eventos de partido inmutables
-└── [x] Mercado de fichajes con máquina de estados
+### Foundation
 
-BOT
-├── [ ] /setup
-├── [ ] /league-team
-├── [ ] /league-competition
-├── [ ] Generación de fixtures
-├── [ ] Carga de actas
-└── [ ] Cálculo de tablas
+- [x] Modelo de dominio en Prisma
+- [x] Entidad `Tie`
+- [x] Eventos de partido inmutables
+- [x] Mercado de fichajes con máquina de estados
 
-COMPETITION
-├── [ ] Avance de rondas
-├── [ ] Premios y palmarés
-└── [ ] Más herramientas de competición
+### Bot
 
-FUTURE
-└── [ ] Web pública con datos de la liga
-```
+- [ ] `/setup`
+- [ ] `/league-team`
+- [ ] `/league-competition`
+- [ ] Generación de fixtures
+- [ ] Carga de actas
+- [ ] Cálculo de tablas
 
----
+### Competition
 
-## 🚀 Desarrollo local
+- [ ] Avance de rondas
+- [ ] Premios
+- [ ] Palmarés
 
-```bash
-git clone https://github.com/Kevris/AGON.git
-cd AGON
-npm install
-```
+### Future
 
-Después, configura las variables de entorno y la conexión de Prisma/PostgreSQL según tu entorno local.
-
-Los comandos exactos de ejecución dependen del `package.json` de la versión que se esté trabajando.
+- [ ] Web pública con datos reales de la liga
 
 ---
 
-## 🧭 Algunas decisiones que pueden cambiar
+## 🧪 Por qué está hecho así
 
-<details>
-<summary><strong>¿Por qué un solo proceso?</strong></summary>
+### Un solo proceso
 
-<br>
+Hoy solo existe un cliente real: Discord.
 
-Porque hoy el único cliente real es el bot.
+Separar servicios porque "algún día" puede haber una web es añadir contratos que todavía no hacen falta.
 
-Separarlo en servicios ahora añadiría contratos y despliegues sin una necesidad concreta.
+### Una API, cuando exista una razón
 
-</details>
+Cuando la web necesite sesiones y operaciones propias habrá una decisión arquitectónica real que tomar.
 
-<details>
-<summary><strong>¿Por qué no una API todavía?</strong></summary>
+Antes de eso, `src/domain/` es suficiente como núcleo compartido.
 
-<br>
+### Infraestructura después del problema
 
-Porque Discord puede llamar directamente al dominio.
+AGON no quiere ganar puntos por tener más carpetas.
 
-Una API empieza a tener sentido cuando exista otro cliente que realmente necesite consumirlo.
+Quiere que cuando aparezca una carpeta nueva exista una razón concreta para que esté ahí.
 
-</details>
+---
 
-<details>
-<summary><strong>¿Por qué no empezar por autenticación?</strong></summary>
+## 🌐 Web / preview
 
-<br>
+Hay una parte web dentro del repositorio y una preview asociada al proyecto:
 
-Porque la versión anterior empezó a construir infraestructura para clientes que todavía no existían.
+**[agon-web → abrir preview](https://agon-sooty-two.vercel.app/)**
 
-Aquí el orden es otro:
+La web y el bot no necesitan compartir interfaz para compartir las reglas.
+
+Ese es precisamente el motivo de mantener el dominio separado.
+
+---
+
+## ✨ README que se actualiza solo
+
+Los elementos dinámicos de este README no dependen todos de servidores de terceros.
+
+El repositorio incluye:
 
 ```text
-modelo
-  ↓
-dominio
-  ↓
-cliente real
-  ↓
-infraestructura cuando haga falta
+.github/
+└── workflows/
+    └── readme-assets.yml
+
+terminal.yml
+
+assets/
+├── agon-hero-dark.svg
+├── agon-hero-light.svg
+├── agon-console.svg
+├── agon-match-pipeline.gif
+├── agon-pulse-dark.svg
+└── agon-pulse-light.svg
 ```
 
-</details>
+`readme-assets.yml` regenera la consola animada y el panel de actividad con GitHub Actions.
+
+El `picture` del header también cambia de imagen según el tema claro/oscuro del lector.
 
 ---
+
+## 📊 Project pulse
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/agon-pulse-dark.svg">
+    <source media="(prefers-color-scheme: light)" srcset="assets/agon-pulse-light.svg">
+    <img src="assets/agon-pulse-dark.svg" width="100%" alt="Estado dinámico del repositorio AGON">
+  </picture>
+</p>
+
+<p align="center">
+  <sub>Generado por el propio repositorio. No es una captura.</sub>
+</p>
+
+---
+
+## 🛠️ Automatización del README
+
+Este README tiene un pequeño sistema aparte para sus recursos visuales:
+
+```text
+README.md
+   │
+   ├── hero → SVG local
+   ├── match pipeline → GIF local
+   ├── domain console → SVG animado
+   └── project pulse → SVG generado por Actions
+                         │
+                         └── GitHub API
+```
+
+La idea es sencilla: **la presentación también forma parte del proyecto**, pero no debería convertir el código en dependencias innecesarias.
+
+El panel `Project Pulse` se actualiza semanalmente o cuando se ejecuta manualmente el workflow.
+La consola animada se genera desde `terminal.yml`.
+
 
 ## 📄 Licencia
 
@@ -702,19 +656,5 @@ MIT.
 </p>
 
 <p align="center">
-  <a href="https://github.com/Kevris/AGON">
-    <img src="https://komarev.com/ghpvc/?username=Kevris-AGON&style=flat-square&color=58A6FF&label=VISTAS" alt="Vistas"/>
-  </a>
-</p>
-
-<p align="center">
   <a href="#readme-top">↑ volver arriba</a>
-</p>
-
-<p align="center">
-  <img
-    src="https://capsule-render.vercel.app/api?type=waving&color=0:161B22,100:0D1117&height=120&section=footer"
-    width="100%"
-    alt=""
-  />
 </p>

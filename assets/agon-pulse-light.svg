@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
+<title id="title">AGON project pulse</title>
+<desc id="desc">Repository activity summary for AGON, refreshed automatically by GitHub Actions.</desc>
+<rect width="1200" height="300" rx="20" fill="#F6F8FA"/>
+<rect x="1" y="1" width="1198" height="298" rx="19" fill="none" stroke="#D0D7DE"/>
+<text x="40" y="45" font-family="DejaVu Sans, Arial" font-size="16" fill="#57606A">AGON / PROJECT PULSE</text>
+<text x="40" y="78" font-family="DejaVu Sans, Arial" font-size="28" font-weight="700" fill="#24292F">Repository state, generated automatically.</text>
+
+<g font-family="DejaVu Sans, Arial">
+  <rect x="40" y="115" width="250" height="105" rx="16" fill="#FFFFFF" stroke="#D0D7DE"/>
+  <text x="60" y="146" font-size="14" fill="#57606A">COMMITS</text>
+  <text x="60" y="191" font-size="36" font-weight="700" fill="#0969DA">9</text>
+
+  <rect x="315" y="115" width="250" height="105" rx="16" fill="#FFFFFF" stroke="#D0D7DE"/>
+  <text x="335" y="146" font-size="14" fill="#57606A">STARS</text>
+  <text x="335" y="191" font-size="36" font-weight="700" fill="#0969DA">0</text>
+
+  <rect x="590" y="115" width="250" height="105" rx="16" fill="#FFFFFF" stroke="#D0D7DE"/>
+  <text x="610" y="146" font-size="14" fill="#57606A">OPEN ISSUES</text>
+  <text x="610" y="191" font-size="36" font-weight="700" fill="#0969DA">0</text>
+
+  <rect x="865" y="115" width="295" height="105" rx="16" fill="#FFFFFF" stroke="#D0D7DE"/>
+  <text x="885" y="146" font-size="14" fill="#57606A">OPEN PRs</text>
+  <text x="885" y="191" font-size="36" font-weight="700" fill="#0969DA">0</text>
+</g>
+
+<text x="40" y="258" font-family="DejaVu Sans, Arial" font-size="14" fill="#57606A">REFRESHED</text>
+<text x="130" y="258" font-family="DejaVu Sans, Arial" font-size="14" font-weight="700" fill="#1A7F37">26 Sep 2026</text>
+<text x="925" y="258" font-family="DejaVu Sans, Arial" font-size="14" fill="#57606A">Kevris / AGON</text>
+</svg>
