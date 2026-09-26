@@ -1,28 +1,44 @@
-# AGON
+<!--
+████████████████████████████████████████████████████████████████████████████████
+
+                                AGON
+
+                        ἀγών · el certamen
+
+████████████████████████████████████████████████████████████████████████████████
+-->
 
 <a id="readme-top"></a>
 
-<div align="center">
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0D1117,100:161B22&height=220&section=header&text=AGON&fontSize=80&fontColor=58A6FF&fontAlignY=38&desc=%E1%BC%80%CE%B3%CF%8E%CE%BD%20%C2%B7%20el%20certamen&descAlignY=60&descSize=20&animation=fadeIn" width="100%"/>
+</p>
 
-**ἀγών · el certamen**
+<p align="center">
+  <a href="https://github.com/Kevris/AGON">
+    <img src="https://readme-typing-svg.demolab.com?font=Inter&weight=600&size=22&duration=3400&pause=900&color=58A6FF&center=true&vCenter=true&width=720&lines=Plataforma+para+gestionar+ligas+de+Haxball;Un+solo+bot.+Un+solo+proceso.;Del+modelo+al+dominio%2C+y+despu%C3%A9s+al+bot;Construido+para+durar%2C+dise%C3%B1ado+para+cambiar" alt="Typing SVG"/>
+  </a>
+</p>
 
-*Plataforma para gestionar ligas de Haxball de principio a fin: inscripciones, plantillas, mercado de fichajes, competencias, brackets y estadísticas, desde un solo bot de Discord.*
+<p align="center">
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white"/>
+  <img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white"/>
+  <img src="https://img.shields.io/badge/discord.js-5865F2?style=for-the-badge&logo=discord&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Vitest-6E9F18?style=for-the-badge&logo=vitest&logoColor=white"/>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge"/>
+  <img src="https://img.shields.io/badge/Status-Design%20%26%20Schema-f59e0b?style=for-the-badge"/>
+  <img src="https://img.shields.io/badge/Proyecto-Kevris-161B22?style=for-the-badge&logo=github&logoColor=white"/>
+</p>
 
 <br>
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=flat-square&logo=prisma&logoColor=white)](https://www.prisma.io/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![discord.js](https://img.shields.io/badge/discord.js-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.js.org/)
-[![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=flat-square&logo=vitest&logoColor=white)](https://vitest.dev/)
-[![License](https://img.shields.io/badge/License-MIT-22c55e?style=flat-square)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Design%20%26%20Schema-f59e0b?style=flat-square)](#-estado-del-proyecto)
-
-<br>
-
-<sub>Un proyecto de <a href="https://github.com/Kevris">Kevris</a></sub>
-
-</div>
+> **Construido para durar, diseñado para cambiar.**
+>
+> AGON existe para eliminar la fricción de administrar una liga de Haxball de principio a fin: inscripciones, plantillas, mercado de fichajes, competencias, brackets, actas y estadísticas — desde un solo bot, en un solo proceso.
 
 <br>
 
@@ -31,17 +47,16 @@
 
 <br>
 
-- [AGON](#agon)
-  - [🏛️ Qué es AGON](#️-qué-es-agon)
-  - [🔧 Cómo funciona](#-cómo-funciona)
-  - [🧩 El problema que resuelve Tie](#-el-problema-que-resuelve-tie)
-  - [📐 Arquitectura](#-arquitectura)
-  - [🗄️ Modelo de datos](#️-modelo-de-datos)
-  - [⚙️ Stack técnico](#️-stack-técnico)
-  - [🧠 Principios de diseño](#-principios-de-diseño)
-  - [📊 Estado del proyecto](#-estado-del-proyecto)
-  - [🗺️ Roadmap](#️-roadmap)
-  - [📄 Licencia](#-licencia)
+- [🏛️ Qué es AGON](#️-qué-es-agon)
+- [🔧 Cómo funciona](#-cómo-funciona)
+- [🧩 El problema que resuelve Tie](#-el-problema-que-resuelve-tie)
+- [📐 Arquitectura](#-arquitectura)
+- [🗄️ Modelo de datos](#️-modelo-de-datos)
+- [⚙️ Stack técnico](#️-stack-técnico)
+- [🧠 Principios de diseño](#-principios-de-diseño)
+- [📊 Estado del proyecto](#-estado-del-proyecto)
+- [🗺️ Roadmap](#️-roadmap)
+- [📄 Licencia](#-licencia)
 
 </details>
 
@@ -383,6 +398,10 @@ erDiagram
 
 ## ⚙️ Stack técnico
 
+<p align="center">
+  <img src="https://skillicons.dev/icons?i=ts,nodejs,prisma,postgres,discordjs,vitest,git,github,vscode&perline=9" />
+</p>
+
 | Componente    | Tecnología                              | Motivo                                                     |
 | ------------- | --------------------------------------- | ---------------------------------------------------------- |
 | Base de datos | PostgreSQL gestionado (Supabase o Neon) | Motor robusto, capa gratuita suficiente para una liga.     |
@@ -452,16 +471,20 @@ erDiagram
 
 MIT.
 
-<div align="center">
-
 <br>
 
-**AGON** · ἀγών
+<p align="center">
+  <i>Build it. Break it. Understand it. Make it better.</i>
+</p>
 
-*Construido para durar, diseñado para cambiar.*
+<p align="center">
+  <a href="https://github.com/Kevris/AGON">
+    <img src="https://komarev.com/ghpvc/?username=Kevris-AGON&style=flat-square&color=58A6FF&label=VISTAS"/>
+  </a>
+</p>
 
-<br>
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:161B22,100:0D1117&height=120&section=footer"/>
+</p>
+```
 
-<sub>Hecho con ❤️ para la comunidad de Haxball</sub>
-
-</div>
