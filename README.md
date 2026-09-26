@@ -10,24 +10,26 @@
 
 <br>
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![discord.js](https://img.shields.io/badge/discord.js-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.js.org/)
-[![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)](https://vitest.dev/)
-[![License](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
-[![Status](https://img.shields.io/badge/Status-Design%20%26%20Schema-yellow?style=for-the-badge)](#-estado-del-proyecto)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=flat-square&logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![discord.js](https://img.shields.io/badge/discord.js-5865F2?style=flat-square&logo=discord&logoColor=white)](https://discord.js.org/)
+[![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=flat-square&logo=vitest&logoColor=white)](https://vitest.dev/)
+[![License](https://img.shields.io/badge/License-MIT-22c55e?style=flat-square)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-Design%20%26%20Schema-f59e0b?style=flat-square)](#-estado-del-proyecto)
 
 <br>
 
-<sub>Un proyecto de [Kevris](https://github.com/Kevris)</sub>
+<sub>Un proyecto de <a href="https://github.com/Kevris">Kevris</a></sub>
 
 </div>
 
----
+<br>
 
 <details>
 <summary><strong>📖 Tabla de contenidos</strong></summary>
+
+<br>
 
 - [AGON](#agon)
   - [🏛️ Qué es AGON](#️-qué-es-agon)
@@ -347,6 +349,8 @@ erDiagram
 
 <details>
 <summary><strong>📋 Schema completo — los 20 modelos</strong></summary>
+
+<br>
 
 | Modelo                      | Propósito                                                           |
 | --------------------------- | ------------------------------------------------------------------- |
