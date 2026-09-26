@@ -1,10 +1,14 @@
 # AGON
 
+<a id="readme-top"></a>
+
 <div align="center">
 
 **ἀγών · el certamen**
 
 *Plataforma para gestionar ligas de Haxball de principio a fin: inscripciones, plantillas, mercado de fichajes, competencias, brackets y estadísticas, desde un solo bot de Discord.*
+
+<br>
 
 [![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)](https://www.prisma.io/)
@@ -12,22 +16,32 @@
 [![discord.js](https://img.shields.io/badge/discord.js-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.js.org/)
 [![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=for-the-badge&logo=vitest&logoColor=white)](https://vitest.dev/)
 [![License](https://img.shields.io/badge/License-MIT-22c55e?style=for-the-badge)](LICENSE)
+[![Status](https://img.shields.io/badge/Status-Design%20%26%20Schema-yellow?style=for-the-badge)](#-estado-del-proyecto)
+
+<br>
+
+<sub>Un proyecto de [Kevris](https://github.com/Kevris)</sub>
 
 </div>
 
 ---
 
-| Sección | Qué encuentras |
-|---|---|
-| [🏛️ Qué es AGON](#-qué-es-agon) | Descripción general y alcance del proyecto. |
-| [🔧 Cómo funciona](#-cómo-funciona) | El bot, el dominio, el flujo completo. |
-| [🧩 El problema que resuelve Tie](#-el-problema-que-resuelve-tie) | Los bugs de bracket y la solución estructural. |
-| [📐 Arquitectura](#-arquitectura) | Diagrama de procesos y estructura de carpetas. |
-| [🗄️ Modelo de datos](#-modelo-de-datos) | Diagrama entidad-relación y tabla de modelos. |
-| [⚙️ Stack técnico](#-stack-técnico) | Tecnologías y por qué se eligieron. |
-| [🧠 Principios de diseño](#-principios-de-diseño) | Las cinco reglas que guían el proyecto. |
-| [📊 Estado del proyecto](#-estado-del-proyecto) | Qué está hecho y qué falta. |
-| [🗺️ Roadmap](#-roadmap) | Próximos pasos en orden. |
+<details>
+<summary><strong>📖 Tabla de contenidos</strong></summary>
+
+- [AGON](#agon)
+  - [🏛️ Qué es AGON](#️-qué-es-agon)
+  - [🔧 Cómo funciona](#-cómo-funciona)
+  - [🧩 El problema que resuelve Tie](#-el-problema-que-resuelve-tie)
+  - [📐 Arquitectura](#-arquitectura)
+  - [🗄️ Modelo de datos](#️-modelo-de-datos)
+  - [⚙️ Stack técnico](#️-stack-técnico)
+  - [🧠 Principios de diseño](#-principios-de-diseño)
+  - [📊 Estado del proyecto](#-estado-del-proyecto)
+  - [🗺️ Roadmap](#️-roadmap)
+  - [📄 Licencia](#-licencia)
+
+</details>
 
 ---
 
@@ -41,6 +55,8 @@ Toma del fútbol real lo que ayuda a modelar una competencia —la separación e
 
 > [!NOTE]
 > El bot resuelve la liga por `interaction.guild.id` contra `League.discordGuildId`. Nunca hay una config fija con el ID de la liga. Sumar una segunda liga es insertar una fila e invitar el bot a ese servidor.
+
+<p align="right">(<a href="#readme-top">volver arriba</a>)</p>
 
 ---
 
@@ -80,10 +96,17 @@ flowchart TD
     TIE --> PRISMA
     MKT --> PRISMA
     PRISMA --> PG
+
+    style Domain fill:#1a1a2e,stroke:#e94560,color:#fff
+    style Bot fill:#16213e,stroke:#0f3460,color:#fff
+    style DB fill:#0f3460,stroke:#533483,color:#fff
+    style PG fill:#533483,stroke:#e94560,color:#fff
 ```
 
 > [!TIP]
 > El módulo `src/domain/` no importa `discord.js` en ningún archivo. Se puede testear sin levantar el bot, y el día que exista una web, bot y web compartirán el mismo cerebro.
+
+<p align="right">(<a href="#readme-top">volver arriba</a>)</p>
 
 ---
 
@@ -157,6 +180,8 @@ sequenceDiagram
     B-->>S: Avanza equipo X
 ```
 
+<p align="right">(<a href="#readme-top">volver arriba</a>)</p>
+
 ---
 
 ## 📐 Arquitectura
@@ -185,6 +210,11 @@ agon/
 Un solo proceso desplegado. El bot llama a `domain/` como funciones normales de TypeScript. No hay API HTTP intermedia porque no hace falta: el único cliente es el propio bot.
 
 El día que exista una web con sesiones propias, hay dos caminos igual de válidos y ninguno obliga a rediseñar nada: añadir un puñado de rutas Fastify al mismo proceso reutilizando `src/domain/` tal cual, o levantar un segundo servicio — pero solo cuando haya un cliente real del otro lado.
+
+> [!IMPORTANT]
+> El orden importa. La versión anterior empezó por la infraestructura de autenticación multi-cliente antes que por una sola feature visible. AGON invierte ese orden: primero el modelo, después el dominio, después el bot.
+
+<p align="right">(<a href="#readme-top">volver arriba</a>)</p>
 
 ---
 
@@ -318,46 +348,50 @@ erDiagram
 <details>
 <summary><strong>📋 Schema completo — los 20 modelos</strong></summary>
 
-| Modelo | Propósito |
-|---|---|
-| `League` | Techo del sistema. `slug` + `discordGuildId`. |
-| `Modality` | Variante del juego: Futsal x4, Real Soccer. |
-| `Season` | Temporada. Una activa por modalidad. |
-| `Team` | Club persistente. `dtParticipantId` y `subDtParticipantId` como FK. |
-| `Player` | Identidad. `discordId` único. |
-| `Participant` | Ficha del jugador en modalidad + temporada. |
-| `Competition` | `format` (round_robin / single_elimination) + `tier`. |
-| `CompetitionParticipant` | Inscripción de equipos. `group` + `seed`. |
-| `Tie` | Cruce de eliminatoria. `status`, `winnerTeamId`, `resolution`. |
-| `Match` | Partido. `leg`, `roundType`, `status`. |
-| `MatchEvent` | Acta inmutable. `event_reverted` para correcciones. |
-| `PlayerStatProjection` | Totales agregados. Se recalculan desde MatchEvent. |
-| `ManualStatAdjustment` | Corrección manual: quién, cuánto, por qué. |
-| `Award` | Premio de temporada o competencia. |
-| `AwardWinner` | Ganador de un premio individual. |
-| `CompetitionChampionRoster` | Snapshot del plantel campeón. |
-| `TransferOffer` | Oferta de fichaje con máquina de estados. |
-| `TransferOfferStatus` | pending / accepted / rejected / cancelled / expired. |
-| `AuditLog` | Registro de mutaciones. `actorId`, `action`, `before/after`. |
-| `Position` | Enum: GK, DEF, MID, DFWD, FWD, N/A. |
+| Modelo                      | Propósito                                                           |
+| --------------------------- | ------------------------------------------------------------------- |
+| `League`                    | Techo del sistema. `slug` + `discordGuildId`.                       |
+| `Modality`                  | Variante del juego: Futsal x4, Real Soccer.                         |
+| `Season`                    | Temporada. Una activa por modalidad.                                |
+| `Team`                      | Club persistente. `dtParticipantId` y `subDtParticipantId` como FK. |
+| `Player`                    | Identidad. `discordId` único.                                       |
+| `Participant`               | Ficha del jugador en modalidad + temporada.                         |
+| `Competition`               | `format` (round_robin / single_elimination) + `tier`.               |
+| `CompetitionParticipant`    | Inscripción de equipos. `group` + `seed`.                           |
+| `Tie`                       | Cruce de eliminatoria. `status`, `winnerTeamId`, `resolution`.      |
+| `Match`                     | Partido. `leg`, `roundType`, `status`.                              |
+| `MatchEvent`                | Acta inmutable. `event_reverted` para correcciones.                 |
+| `PlayerStatProjection`      | Totales agregados. Se recalculan desde MatchEvent.                  |
+| `ManualStatAdjustment`      | Corrección manual: quién, cuánto, por qué.                          |
+| `Award`                     | Premio de temporada o competencia.                                  |
+| `AwardWinner`               | Ganador de un premio individual.                                    |
+| `CompetitionChampionRoster` | Snapshot del plantel campeón.                                       |
+| `TransferOffer`             | Oferta de fichaje con máquina de estados.                           |
+| `TransferOfferStatus`       | pending / accepted / rejected / cancelled / expired.                |
+| `AuditLog`                  | Registro de mutaciones. `actorId`, `action`, `before/after`.        |
+| `Position`                  | Enum: GK, DEF, MID, DFWD, FWD, N/A.                                 |
 
 </details>
+
+<p align="right">(<a href="#readme-top">volver arriba</a>)</p>
 
 ---
 
 ## ⚙️ Stack técnico
 
-| Componente | Tecnología | Motivo |
-|---|---|---|
-| Base de datos | PostgreSQL gestionado (Supabase o Neon) | Motor robusto, capa gratuita suficiente para una liga. |
-| ORM | Prisma | Tipado de extremo a extremo, migraciones versionadas. |
-| Bot | discord.js | El cliente de Discord para Node.js. |
-| Runtime | Node.js + TypeScript | Un solo lenguaje para dominio, bot y base de datos. |
-| Tests | Vitest | Rápido, compatible con TypeScript sin configuración extra. |
-| Hosting | VPS pequeño o host de bots | Un solo proceso Node. Sin Docker. |
+| Componente    | Tecnología                              | Motivo                                                     |
+| ------------- | --------------------------------------- | ---------------------------------------------------------- |
+| Base de datos | PostgreSQL gestionado (Supabase o Neon) | Motor robusto, capa gratuita suficiente para una liga.     |
+| ORM           | Prisma                                  | Tipado de extremo a extremo, migraciones versionadas.      |
+| Bot           | discord.js                              | El cliente de Discord para Node.js.                        |
+| Runtime       | Node.js + TypeScript                    | Un solo lenguaje para dominio, bot y base de datos.        |
+| Tests         | Vitest                                  | Rápido, compatible con TypeScript sin configuración extra. |
+| Hosting       | VPS pequeño o host de bots              | Un solo proceso Node. Sin Docker.                          |
 
 > [!WARNING]
 > La versión anterior del proyecto murió de peso: tres clientes imaginarios pidiendo autenticación JWT, un servicio de API separado y una capa de roles con alcance. Con un solo cliente real —el bot— nada de eso hace falta todavía. El día que exista una web con sesiones propias, esa infraestructura se ganará su lugar. No antes.
+
+<p align="right">(<a href="#readme-top">volver arriba</a>)</p>
 
 ---
 
@@ -373,16 +407,23 @@ erDiagram
 
 **Multi-tenant desde el modelo.** No es "si hay una segunda liga, agregamos un filtro por acá". Todo cuelga de `League` desde la primera tabla.
 
+<p align="right">(<a href="#readme-top">volver arriba</a>)</p>
+
 ---
 
 ## 📊 Estado del proyecto
 
-| Componente | Estado | Notas |
-|---|---|---|
-| Schema v1 | ✅ Completo | Modelo completo en Prisma: liga, modalidad, temporada, equipo, jugador, competencia, cruce, partido, evento, mercado y auditoría. |
-| Dominio puro | ✅ Completo | Generación de fixtures round-robin y eliminatoria, cálculo de tablas, avance de cruces. Lógica probada. |
-| Bot de Discord | ⏳ En desarrollo | Comandos de staff, jugadores y directores técnicos. Único cliente de esta versión. |
-| Web | ⏸️ Pospuesta | El schema y el dominio puro ya la dejan fácil de sumar. Se construye cuando haya datos reales que mostrar. |
+| Componente     | Estado          | Notas                                                                                                                             |
+| -------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| Schema v1      | ✅ Completo      | Modelo completo en Prisma: liga, modalidad, temporada, equipo, jugador, competencia, cruce, partido, evento, mercado y auditoría. |
+| Dominio puro   | ✅ Completo      | Generación de fixtures round-robin y eliminatoria, cálculo de tablas, avance de cruces. Lógica probada.                           |
+| Bot de Discord | ⏳ En desarrollo | Comandos de staff, jugadores y directores técnicos. Único cliente de esta versión.                                                |
+| Web            | ⏸️ Pospuesta     | El schema y el dominio puro ya la dejan fácil de sumar. Se construye cuando haya datos reales que mostrar.                        |
+
+> [!NOTE]
+> Este proyecto está en fase de diseño y primeros borradores. El schema de datos está completo y validado. El siguiente paso es definir el primer corte de comandos y empezar a escribirlos.
+
+<p align="right">(<a href="#readme-top">volver arriba</a>)</p>
 
 ---
 
@@ -399,6 +440,8 @@ erDiagram
 - [ ] Premios y palmarés
 - [ ] Web pública con datos de la liga
 
+<p align="right">(<a href="#readme-top">volver arriba</a>)</p>
+
 ---
 
 ## 📄 Licencia
@@ -407,8 +450,14 @@ MIT.
 
 <div align="center">
 
+<br>
+
 **AGON** · ἀγών
 
 *Construido para durar, diseñado para cambiar.*
+
+<br>
+
+<sub>Hecho con ❤️ para la comunidad de Haxball</sub>
 
 </div>
