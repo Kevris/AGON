@@ -1,0 +1,624 @@
+// ─────────────────────────────────────────────────────────────────────────
+// AGON — schema.prisma (v1, primer borrador)
+//
+// Parte del schema real de la V4 abandonada (liga-v2), recortado según el
+// veredicto de docs/agon-modelo-dominio.md §0-cuater:
+//   - Sin User/UserRole/JWT — permisos siguen resolviéndose contra roles
+//     de Discord en vivo, como en V3. Por eso los campos "quién hizo esto"
+//     son String? (guardan el Discord ID crudo), no FK a una tabla User.
+//   - League como raíz — hoy una sola fila, pero cada Modality ya cuelga
+//     de una League desde el día 1: sumar una segunda liga el día de
+//     mañana es una fila nueva, no una migración.
+//   - *Branding / *DiscordMeta / *ModalityDiscordConfig / *ClientMeta
+//     colapsadas de vuelta en su tabla dueña — eran 5 tablas 1:1 pensadas
+//     para un segundo cliente que no existe todavía.
+//   - CompetitionType + CompetitionFormat unificados en un solo enum.
+//   - Tie: entidad nueva, no existía ni en V3 ni en la V4 abandonada — es
+//     la pieza que causó los bugs de bracket de la sesión de auditoría.
+//
+// Convención: nombres de modelo en PascalCase/camelCase (estilo Prisma),
+// tablas en snake_case vía @@map. Nada de lógica de negocio acá — esto es
+// solo estructura, igual que en el schema original.
+// ─────────────────────────────────────────────────────────────────────────
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// RAÍZ — LIGA
+// ═══════════════════════════════════════════════════════════════════════
+
+/// Hoy existe una sola fila (tu liga). El día que AGON aloje una segunda
+/// liga (agon/haxven, agon/haxcol...), es literalmente insertar otra fila
+/// acá e invitar el bot a ese servidor — el bot resuelve la liga por
+/// `interaction.guild.id` contra `discordGuildId`, nunca por config fija.
+model League {
+  id             Int      @id @default(autoincrement())
+  /// url-safe, para cuando exista la web: agon.gg/haxven
+  slug           String   @unique
+  name           String
+  discordGuildId String?  @unique
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  modalities Modality[]
+
+  @@map("leagues")
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// NÚCLEO: MODALIDAD → TEMPORADA → EQUIPO → JUGADOR
+// ═══════════════════════════════════════════════════════════════════════
+
+model Modality {
+  id             Int      @id @default(autoincrement())
+  leagueId       Int
+  name           String
+  displayName    String
+  playersPerTeam Int
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+
+  // Config de Discord — campos directos, no tabla aparte (ver nota de
+  // cabecera). rolDt/rolSubDt no existen: DT/Sub-DT es Team.dtParticipantId
+  // / subDtParticipantId, un hecho de dominio, no un rol de Discord.
+  rolAdmin             String?
+  rolEstadistiquero    String?
+  canalMercadoFichajes String?
+  canalMercadoBajas    String?
+  canalResultados      String?
+  canalLogs            String?
+  marketOpen           Boolean @default(false)
+
+  league         League          @relation(fields: [leagueId], references: [id])
+  seasons        Season[]
+  teams          Team[]
+  participants   Participant[]
+  transferOffers TransferOffer[]
+
+  @@unique([leagueId, name])
+  @@index([leagueId])
+  @@map("modalities")
+}
+
+model Season {
+  id         Int       @id @default(autoincrement())
+  modalityId Int
+  name       String
+  isActive   Boolean   @default(false)
+  startedAt  DateTime  @default(now())
+  endedAt    DateTime?
+
+  modality       Modality        @relation(fields: [modalityId], references: [id])
+  competitions   Competition[]
+  participants   Participant[]
+  awards         Award[]
+  transferOffers TransferOffer[]
+
+  @@unique([modalityId, name])
+  @@index([modalityId])
+  // Un solo Season activo por modalidad se garantiza en la capa de
+  // dominio (transacción), no con constraint de DB.
+  @@map("seasons")
+}
+
+model Team {
+  id             Int      @id @default(autoincrement())
+  modalityId     Int
+  name           String
+  abbreviation   String
+  isActive       Boolean  @default(true)
+  emergencySigns Int      @default(2)
+
+  // DT y Sub-DT como hechos de dominio directos, no roles de Discord
+  // consultados en el momento. A lo sumo un equipo por participante
+  // (@unique en ambos); nada impide que estén vacíos.
+  dtParticipantId    Int? @unique
+  subDtParticipantId Int? @unique
+
+  // Presentación + Discord — campos directos (ver nota de cabecera).
+  logoUrl         String?
+  uniformHome     String?
+  uniformAway     String?
+  discordRoleId   String? @unique
+  discordEmojiId  String?
+
+  createdAt DateTime @default(now())
+
+  modality         Modality     @relation(fields: [modalityId], references: [id])
+  dtParticipant    Participant? @relation("TeamDt", fields: [dtParticipantId], references: [id])
+  subDtParticipant Participant? @relation("TeamSubDt", fields: [subDtParticipantId], references: [id])
+  participants     Participant[] @relation("TeamRoster")
+
+  competitionParticipants CompetitionParticipant[]
+  homeMatches             Match[]        @relation("HomeTeam")
+  awayMatches             Match[]        @relation("AwayTeam")
+  homeTies                Tie[]          @relation("TieTeamA")
+  awayTies                Tie[]          @relation("TieTeamB")
+  wonTies                 Tie[]          @relation("TieWinner")
+  championTitles          Competition[]  @relation("Champion")
+  transferOffers          TransferOffer[]
+  matchEventSnapshots     MatchEvent[]   @relation("MatchEventTeamSnapshot")
+
+  @@unique([modalityId, name])
+  @@index([modalityId])
+  @@map("teams")
+}
+
+model Player {
+  id         Int      @id @default(autoincrement())
+  discordId  String   @unique
+  username   String
+  globalName String?
+  createdAt  DateTime @default(now())
+
+  participants    Participant[]
+  awardWinners    AwardWinner[]
+  championRosters CompetitionChampionRoster[]
+
+  @@map("players")
+}
+
+enum Position {
+  GK
+  DEF
+  MID
+  DFWD
+  FWD
+  NA @map("N/A")
+}
+
+/// La participación de un jugador en una modalidad+temporada concreta.
+/// Player = identidad. Participant = "ficha" de esa identidad en un
+/// contexto — puede tener varias por jugador (una por temporada/modalidad
+/// que jugó, incluso simultáneas).
+///
+/// `teamId` es el puntero al estado actual — la HISTORIA de altas/bajas
+/// vive en TransferOffer (aceptadas) + un log de movimientos si hace
+/// falta consultarlo más adelante. No se modela un "Squad"/"membership"
+/// aparte todavía: con TransferOffer ya queda quién, cuándo y por qué se
+/// movió cada jugador — agregar una tabla de períodos explícita es barato
+/// de sumar después si hace falta reconstruir "quién jugaba en qué equipo
+/// tal fecha" con más precisión de la que da el historial de ofertas.
+model Participant {
+  id         Int      @id @default(autoincrement())
+  playerId   Int
+  teamId     Int?
+  seasonId   Int
+  modalityId Int
+  position   Position @default(NA)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
+  player   Player   @relation(fields: [playerId], references: [id])
+  team     Team?    @relation("TeamRoster", fields: [teamId], references: [id])
+  season   Season   @relation(fields: [seasonId], references: [id])
+  modality Modality @relation(fields: [modalityId], references: [id])
+
+  matchEvents       MatchEvent[]
+  statProjections   PlayerStatProjection[]
+  manualAdjustments ManualStatAdjustment[]
+  dtOfTeam          Team? @relation("TeamDt")
+  subDtOfTeam       Team? @relation("TeamSubDt")
+
+  @@unique([playerId, seasonId, modalityId], name: "uq_participant_player_season_modality")
+  @@index([seasonId, modalityId])
+  @@index([seasonId, teamId])
+  @@map("participants")
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// COMPETENCIAS
+// ═══════════════════════════════════════════════════════════════════════
+
+/// Antes eran dos enums (CompetitionType + CompetitionFormat) diciendo
+/// casi lo mismo. Uno solo: cómo se juega, no "qué tipo de cosa es".
+/// "Amistoso" no es un formato aparte — es un round_robin de un partido,
+/// o directamente un Match sin Competition si es un cruce suelto.
+enum CompetitionFormat {
+  round_robin
+  single_elimination
+}
+
+model Competition {
+  id       Int               @id @default(autoincrement())
+  seasonId Int
+  name     String
+  format   CompetitionFormat @default(round_robin)
+
+  /// Múltiples divisiones = múltiples Competition en la misma Season con
+  /// el mismo format y distinto tier (1 = Primera, 2 = Segunda...). null
+  /// si no aplica (copas, torneos únicos). No hace falta un modelo
+  /// "Division" separado.
+  tier Int?
+
+  /// vueltas, puntos_victoria/empate/derrota, tiene_grupos, nombre_grupos,
+  /// wildcards, tiempo_espera_minutos, diferencia_goles_walkover... — las
+  /// reglas específicas de esta competencia puntual, no hardcodeadas en
+  /// el bot. Ver domain/competitionRules.ts para las claves esperadas.
+  settings Json @default("{}")
+
+  isActive  Boolean  @default(true)
+  campeonId Int?
+  createdAt DateTime @default(now())
+
+  season            Season                       @relation(fields: [seasonId], references: [id])
+  campeon           Team?                        @relation("Champion", fields: [campeonId], references: [id])
+  participants      CompetitionParticipant[]
+  ties              Tie[]
+  matches           Match[]
+  awards            Award[]
+  championRoster    CompetitionChampionRoster[]
+  statProjections   PlayerStatProjection[]
+  manualAdjustments ManualStatAdjustment[]
+
+  @@unique([seasonId, name])
+  @@index([seasonId])
+  @@index([isActive])
+  @@index([seasonId, tier])
+  @@map("competitions")
+}
+
+enum ParticipantStatus {
+  active
+  withdrawn
+}
+
+/// Qué equipos participan en qué competencia. Regla "un equipo, una liga
+/// por temporada" vive en la capa de dominio, no aquí.
+model CompetitionParticipant {
+  id            Int               @id @default(autoincrement())
+  competitionId Int
+  teamId        Int
+  status        ParticipantStatus @default(active)
+  /// Fase de grupos (round_robin con tiene_grupos:true en settings).
+  group         String?
+  /// Siembra para el sorteo de single_elimination.
+  seed          Int?
+
+  competition Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  team        Team        @relation(fields: [teamId], references: [id])
+
+  @@unique([competitionId, teamId])
+  @@index([competitionId])
+  @@index([teamId])
+  @@index([status])
+  @@map("competition_participants")
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// CRUCES DE ELIMINATORIA — la pieza que faltaba en V3 y en la V4 abandonada
+// ═══════════════════════════════════════════════════════════════════════
+
+enum TieStatus {
+  pending          // ningún leg jugado todavía
+  first_leg_done   // (solo si la ronda es ida y vuelta) ida confirmada, falta vuelta
+  resolved         // hay ganador definido
+}
+
+enum TieResolution {
+  normal    // se definió jugando (agregado, o único partido)
+  walkover  // se definió por W.O.
+  manual    // empate en agregado sin gol de visitante/penales — resuelto a mano
+}
+
+/// Un cruce de bracket (ej: "Lexington SC vs Cortuluá FC, Octavos de
+/// Final"). Tiene 1 o 2 Match (single / ida+vuelta según config de la
+/// ronda). Esto es lo que responde de una sola consulta preguntas que en
+/// V3 se recalculaban cada vez de formas ligeramente distintas: "¿qué
+/// toca ahora?", "¿ya se puede armar la vuelta?", "¿quién avanza?".
+model Tie {
+  id            Int           @id @default(autoincrement())
+  competitionId Int
+  round         Int
+  teamAId       Int
+  teamBId       Int
+  status        TieStatus     @default(pending)
+  winnerTeamId  Int?
+  resolution    TieResolution?
+  createdAt     DateTime      @default(now())
+
+  competition Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  teamA       Team        @relation("TieTeamA", fields: [teamAId], references: [id])
+  teamB       Team        @relation("TieTeamB", fields: [teamBId], references: [id])
+  winner      Team?       @relation("TieWinner", fields: [winnerTeamId], references: [id])
+  matches     Match[]
+
+  @@index([competitionId, round])
+  @@index([competitionId, status])
+  @@map("ties")
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PARTIDOS
+// ═══════════════════════════════════════════════════════════════════════
+
+enum MatchStatus {
+  pending
+  in_progress
+  confirmed
+  voided
+}
+
+enum RoundType {
+  league
+  group
+  knockout
+  playoff
+}
+
+enum LegType {
+  single
+  first
+  second
+}
+
+model Match {
+  id            Int         @id @default(autoincrement())
+  competitionId Int
+  /// null para partidos de round_robin — solo se llena en single_elimination.
+  tieId         Int?
+  homeTeamId    Int
+  awayTeamId    Int
+
+  /// Derivados — recalculables en cualquier momento desde MatchEvent.
+  homeScore Int?
+  awayScore Int?
+
+  round     Int?
+  roundType RoundType   @default(league)
+  leg       LegType     @default(single)
+  status    MatchStatus @default(pending)
+
+  /// Discord ID crudo de quien creó/confirmó — sin tabla User (ver nota
+  /// de cabecera), los permisos se resuelven contra roles de Discord en
+  /// vivo al momento de cada acción, no hace falta guardar más que esto.
+  createdBy   String?
+  confirmedBy String?
+  playedAt    DateTime?
+
+  // Discord/replays — campos directos (ver nota de cabecera).
+  discordThreadId String? @unique
+  replay1t        String?
+  replay2t        String?
+  replayEx        String?
+  replayFt        String?
+
+  createdAt DateTime @default(now())
+
+  competition Competition  @relation(fields: [competitionId], references: [id])
+  tie         Tie?         @relation(fields: [tieId], references: [id])
+  homeTeam    Team         @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeam    Team         @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  events      MatchEvent[]
+
+  @@unique([competitionId, homeTeamId, awayTeamId, round, leg], name: "uq_match_competition_teams_round_leg")
+  @@index([competitionId])
+  @@index([tieId])
+  @@index([status])
+  @@index([competitionId, status])
+  @@index([competitionId, roundType])
+  @@index([competitionId, round])
+  @@map("matches")
+}
+
+enum MatchEventType {
+  goal
+  assist
+  own_goal
+  clean_sheet
+  mvp
+  ghost_goal
+  yellow_card
+  red_card
+  event_reverted
+}
+
+/// Verdad histórica del partido. INMUTABLE — nunca se hace UPDATE del
+/// value ni DELETE para anular. Corregir = insertar un evento nuevo de
+/// tipo event_reverted apuntando al original vía targetEventId.
+model MatchEvent {
+  id      Int            @id @default(autoincrement())
+  matchId Int
+  type    MatchEventType
+  /// null para ghost_goal (no pertenece a ningún jugador).
+  participantId Int?
+  /// SNAPSHOT del equipo en el momento del evento. Nunca se reescribe, ni
+  /// siquiera si el partido hace swap de local/visitante después.
+  teamId Int
+  value  Float @default(1)
+  order  Int
+
+  /// Opaco — ej. messageId de Discord. null si no aplica.
+  sourceRef String?
+  createdBy String?
+  /// Solo poblado cuando type = event_reverted.
+  targetEventId Int?
+  createdAt     DateTime @default(now())
+
+  match       Match        @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  participant Participant? @relation(fields: [participantId], references: [id])
+  team        Team         @relation("MatchEventTeamSnapshot", fields: [teamId], references: [id])
+  targetEvent MatchEvent?  @relation("EventRevert", fields: [targetEventId], references: [id])
+  reverts     MatchEvent[] @relation("EventRevert")
+
+  @@index([matchId])
+  @@index([participantId])
+  @@index([teamId])
+  @@index([matchId, teamId])
+  @@map("match_events")
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// ESTADÍSTICAS DERIVADAS — único origen: MatchEvent
+// ═══════════════════════════════════════════════════════════════════════
+
+/// Totales agregados por participante+competencia. Se recalculan al
+/// procesar cada MatchEvent (o event_reverted) — nunca se editan a mano.
+model PlayerStatProjection {
+  id            Int      @id @default(autoincrement())
+  participantId Int
+  competitionId Int
+  goals         Int      @default(0)
+  assists       Int      @default(0)
+  ownGoals      Int      @default(0)
+  /// admite 0.5 (medio tiempo de valla invicta)
+  cleanSheets Float    @default(0)
+  mvps        Int      @default(0)
+  yellowCards Int      @default(0)
+  redCards    Int      @default(0)
+  updatedAt   DateTime @updatedAt
+
+  participant Participant @relation(fields: [participantId], references: [id])
+  competition Competition @relation(fields: [competitionId], references: [id])
+
+  @@unique([participantId, competitionId])
+  @@index([participantId])
+  @@index([competitionId])
+  @@map("player_stat_projections")
+}
+
+/// Correcciones manuales sin partido de por medio (lo que V1 llamaba
+/// "stats fantasma"). Explícito: quién, cuánto, por qué.
+model ManualStatAdjustment {
+  id            Int      @id @default(autoincrement())
+  participantId Int
+  competitionId Int
+  /// "goals" | "assists" | "ownGoals" | "cleanSheets" | "mvps" | ...
+  statKey String
+  delta   Float
+  reason  String?
+  actorId String?
+  createdAt DateTime @default(now())
+
+  participant Participant @relation(fields: [participantId], references: [id])
+  competition Competition @relation(fields: [competitionId], references: [id])
+
+  @@index([participantId, competitionId])
+  @@map("manual_stat_adjustments")
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// PREMIOS Y TÍTULOS
+// ═══════════════════════════════════════════════════════════════════════
+
+model Award {
+  id            Int      @id @default(autoincrement())
+  seasonId      Int
+  competitionId Int?
+  name          String
+  notes         String?
+  createdAt     DateTime @default(now())
+
+  season      Season        @relation(fields: [seasonId], references: [id])
+  competition Competition?  @relation(fields: [competitionId], references: [id], onDelete: SetNull)
+  winners     AwardWinner[]
+
+  @@unique([seasonId, name])
+  @@index([seasonId])
+  @@index([competitionId])
+  @@map("awards")
+}
+
+/// Un Award (individual) tiene exactamente un ganador.
+model AwardWinner {
+  id       Int @id @default(autoincrement())
+  awardId  Int
+  playerId Int
+
+  award  Award  @relation(fields: [awardId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id])
+
+  @@unique([awardId, playerId])
+  @@index([awardId])
+  @@index([playerId])
+  @@map("award_winners")
+}
+
+/// Foto histórica e inmutable del plantel campeón. El título de equipo en
+/// sí vive en Competition.campeonId; esto es "quiénes estaban en el
+/// equipo cuando ganó".
+model CompetitionChampionRoster {
+  competitionId Int
+  playerId      Int
+
+  competition Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  player      Player      @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@id([competitionId, playerId])
+  @@index([competitionId])
+  @@index([playerId])
+  @@map("competition_champion_rosters")
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// MERCADO DE FICHAJES
+// ═══════════════════════════════════════════════════════════════════════
+
+enum TransferOfferStatus {
+  pending
+  accepted
+  rejected
+  cancelled
+  expired
+}
+
+model TransferOffer {
+  id                    Int                 @id @default(autoincrement())
+  modalityId            Int
+  seasonId              Int
+  teamId                Int
+  offeredById           String?
+  targetPlayerId        Int
+  position              String
+  isMain                Boolean             @default(false)
+  isEmergency           Boolean             @default(false)
+  replacedParticipantId Int?
+  status                TransferOfferStatus @default(pending)
+  expiresAt             DateTime
+
+  /// Dónde vive la oferta en Discord (canal + mensaje con los botones).
+  /// El customId del botón solo necesita el id de la oferta; el resto se
+  /// reconstruye desde acá — así reiniciar el bot no pierde el contexto.
+  discordChannelId String?
+  discordMessageId String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  modality Modality @relation(fields: [modalityId], references: [id])
+  season   Season   @relation(fields: [seasonId], references: [id])
+  team     Team     @relation(fields: [teamId], references: [id])
+
+  @@index([modalityId])
+  @@index([seasonId])
+  @@index([teamId])
+  @@index([status])
+  @@map("transfer_offers")
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// AUDITORÍA
+// ═══════════════════════════════════════════════════════════════════════
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  /// Discord ID crudo — ver nota sobre no tener tabla User.
+  actorId    String?
+  action     String
+  entityType String
+  entityId   Int
+  before     Json?
+  after      Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+  @@map("audit_logs")
+}
