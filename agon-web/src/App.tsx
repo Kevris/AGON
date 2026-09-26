@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Nav from "./components/Nav";
 import Hero from "./components/Hero";
+import Origin from "./components/Origin";
 import HowItWorks from "./components/HowItWorks";
 import Architecture from "./components/Architecture";
 import Principles from "./components/Principles";
@@ -9,6 +10,7 @@ import Footer from "./components/Footer";
 import Preloader from "./components/Preloader";
 import CustomCursor from "./components/CustomCursor";
 import Grain from "./components/Grain";
+import ScrollProgress from "./components/ScrollProgress";
 import { useSmoothScroll } from "./lib/smoothScroll";
 
 export default function App() {
@@ -20,9 +22,11 @@ export default function App() {
       <Preloader onDone={() => setReady(true)} />
       <CustomCursor />
       <Grain />
+      <ScrollProgress />
       <div style={{ opacity: ready ? 1 : 0, transition: "opacity .4s" }}>
         <Nav />
         <Hero />
+        <Origin />
         <HowItWorks />
         <Architecture />
         <Principles />

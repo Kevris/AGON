@@ -1,14 +1,16 @@
 import { motion } from "framer-motion";
 import TieDemo from "./TieDemo";
+import MatchEventDemo from "./MatchEventDemo";
 import ModelJourney from "./ModelJourney";
+import Reveal from "./Reveal";
 
 export default function HowItWorks() {
   return (
-    <section id="como-funciona">
+    <section id="como-funciona" className="border-t border-chalk/10">
       <div className="mx-auto max-w-3xl px-6 pt-28">
-        <h2 className="font-display text-3xl font-bold text-chalk sm:text-4xl">
+        <Reveal as="h2" className="font-display text-3xl font-bold text-chalk sm:text-4xl">
           Una liga de Haxball, de principio a fin
-        </h2>
+        </Reveal>
         <p className="mt-5 text-chalk-dim">
           AGON gestiona inscripciones, plantillas, fichajes, competencias y premios
           desde un solo bot de Discord. Está construida multi-liga desde el modelo:
@@ -45,6 +47,29 @@ export default function HowItWorks() {
             transition={{ duration: 0.5 }}
           >
             <TieDemo />
+          </motion.div>
+        </div>
+
+        <div className="mt-24 grid gap-16 border-t border-chalk/10 pt-24 lg:grid-cols-2 lg:gap-12">
+          <div>
+            <h3 className="font-display text-2xl font-bold text-chalk">Corregir un gol no borra nada</h3>
+            <p className="mt-4 text-sm text-chalk-dim">
+              Un acta digital sirve de poco si se puede reescribir. Cada corrección es un evento
+              nuevo — <code className="rounded bg-turf-2 px-1.5 py-0.5 font-mono text-chalk">event_reverted</code> —
+              que apunta al que anula, nunca lo elimina. El historial completo queda a la vista; el
+              marcador se calcula sobre lo vigente, no sobre lo editado.
+            </p>
+            <p className="mt-4 text-sm text-chalk-dim">
+              Pruébalo: anulá el gol del minuto 9 y mirá qué pasa con el acta y con el marcador.
+            </p>
+          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-60px" }}
+            transition={{ duration: 0.5 }}
+          >
+            <MatchEventDemo />
           </motion.div>
         </div>
       </div>

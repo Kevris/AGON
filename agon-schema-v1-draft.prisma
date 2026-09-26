@@ -219,8 +219,10 @@ model Participant {
 
 /// Antes eran dos enums (CompetitionType + CompetitionFormat) diciendo
 /// casi lo mismo. Uno solo: cómo se juega, no "qué tipo de cosa es".
-/// "Amistoso" no es un formato aparte — es un round_robin de un partido,
-/// o directamente un Match sin Competition si es un cruce suelto.
+/// Sin "friendly": confirmado que las ligas de Haxball no llevan ningún
+/// registro de amistosos (son acuerdos directos entre equipos, sin stats
+/// ni participación de la liga) — no es un caso que este modelo deba
+/// contemplar como negocio.
 enum CompetitionFormat {
   round_robin
   single_elimination
@@ -409,6 +411,16 @@ model Match {
 }
 
 enum MatchEventType {
+  /// Presencia en el partido — siempre se registra, tenga o no otros
+  /// eventos destacados. `value` = minutos jugados si se conocen (viene
+  /// del motor de replays), o simplemente 1 si se cargó a mano sin ese
+  /// dato. Sin esto, un jugador con un partido tranquilo (sin goles, sin
+  /// tarjetas) no queda registrado como que jugó en ningún lado — ni cuenta
+  /// para `pj`, ni para el roster de campeón. Es el fix del hueco que
+  /// encontramos revisando V3: `statsHelper.ts` (carga manual) nunca tuvo
+  /// este concepto, solo `autoStats.ts` (replays) lo calculaba, y encima
+  /// sin persistirlo cuando no había otras stats.
+  appearance
   goal
   assist
   own_goal
@@ -541,9 +553,15 @@ model AwardWinner {
   @@map("award_winners")
 }
 
-/// Foto histórica e inmutable del plantel campeón. El título de equipo en
-/// sí vive en Competition.campeonId; esto es "quiénes estaban en el
-/// equipo cuando ganó".
+/// Foto histórica e inmutable de quién jugó de verdad en el equipo
+/// campeón durante ESTA competencia — se llena con una consulta contra
+/// MatchEvent (participantId con al menos un evento `appearance` en un
+/// Match confirmed de esta Competition, jugando para el equipo campeón),
+/// nunca con el plantel actual del equipo al momento de asignar el
+/// título. Ver docs/agon-modelo-dominio.md §9-bis — así se evita que
+/// alguien fichado después del torneo quede como "campeón" sin haber
+/// jugado, o que alguien transferido a mitad de torneo (habiendo jugado
+/// la final) quede afuera.
 model CompetitionChampionRoster {
   competitionId Int
   playerId      Int

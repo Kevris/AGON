@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import Reveal from "./Reveal";
 
 const stats = [
   { value: "26 → 20", label: "modelos del schema real, tras recortar lo que resolvía un cliente que no existe" },
@@ -16,13 +17,13 @@ export default function Architecture() {
   return (
     <section className="border-t border-chalk/10 px-6 py-28">
       <div className="mx-auto max-w-5xl">
-        <h2 className="max-w-lg font-display text-3xl font-bold text-chalk sm:text-4xl">
+        <Reveal as="h2" className="max-w-lg font-display text-3xl font-bold text-chalk sm:text-4xl">
           Un proceso, no un enjambre de servicios
-        </h2>
+        </Reveal>
         <p className="mt-5 max-w-xl text-chalk-dim">
-          La versión anterior murió de peso: tres clientes imaginarios pidiendo JWT,
-          un servicio de autenticación y una capa de roles con alcance. Con un solo
-          cliente real — el bot — nada de eso hace falta todavía.
+          Con un solo cliente real — el bot — resolver permisos es mirar un rol de
+          Discord en vivo. Nada de JWT, nada de un segundo servicio, hasta que exista
+          alguien más que lo necesite de verdad.
         </p>
 
         <div className="mt-16 grid gap-3 sm:grid-cols-3">

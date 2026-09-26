@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import Ambient from "./Ambient";
+import { scrollToHash } from "../lib/smoothScroll";
 
 const letters = "AGON".split("");
 
@@ -50,6 +51,10 @@ export default function Hero() {
         >
           <a
             href="#como-funciona"
+            onClick={(e) => {
+              e.preventDefault();
+              scrollToHash("#como-funciona");
+            }}
             data-magnetic
             className="rounded-sm bg-chalk px-6 py-3 text-sm font-medium text-turf transition-transform hover:-translate-y-0.5"
           >

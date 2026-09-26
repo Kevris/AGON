@@ -1,8 +1,12 @@
 import { motion } from "framer-motion";
+import Reveal from "./Reveal";
 
 const principles = [
   { title: "Dominio separado del bot", body: "La lógica de bracket, tabla y transferencias no sabe que existe Discord. Se puede probar sin levantar el bot." },
-  { title: "Un solo punto de verdad", body: "Cada pregunta se responde en un solo lugar, no en tres funciones ligeramente distintas." },
+  {
+    title: "Un solo punto de verdad",
+    body: "Cada pregunta se responde en un solo lugar, no en tres funciones ligeramente distintas. Que un jugador no metiera goles ni tarjetas no significa que no jugó: todo partido registra quién estuvo en la cancha, no solo quién hizo algo destacado.",
+  },
   { title: "Reglas como datos", body: "Wildcards, tiempos de espera y desempates son configuración por competencia, no constantes en el código." },
   { title: "Diseñar para cambiar", body: "Ningún plan sobrevive al primer uso real. Se dejan costuras baratas donde algo puede crecer." },
 ];
@@ -11,9 +15,9 @@ export default function Principles() {
   return (
     <section id="principios" className="border-t border-chalk/10 px-6 py-28">
       <div className="mx-auto max-w-5xl">
-        <h2 className="max-w-lg font-display text-3xl font-bold text-chalk sm:text-4xl">
+        <Reveal as="h2" className="max-w-lg font-display text-3xl font-bold text-chalk sm:text-4xl">
           Cuatro reglas para no repetir los errores de antes
-        </h2>
+        </Reveal>
 
         <div className="mt-16 divide-y divide-chalk/10 border-t border-chalk/10">
           {principles.map((p, i) => (

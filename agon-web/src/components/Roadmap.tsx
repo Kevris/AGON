@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { motion, useScroll, useSpring } from "framer-motion";
+import Reveal from "./Reveal";
 
 const steps = [
   { status: "done" as const, title: "Schema v1", body: "Modelo completo en Prisma: liga, competencia, cruce, partido, mercado y auditoría." },
@@ -18,7 +19,9 @@ export default function Roadmap() {
   return (
     <section id="estado" className="border-t border-chalk/10 px-6 py-28">
       <div className="mx-auto max-w-3xl">
-        <h2 className="font-display text-3xl font-bold text-chalk sm:text-4xl">Dónde está el proyecto hoy</h2>
+        <Reveal as="h2" className="font-display text-3xl font-bold text-chalk sm:text-4xl">
+          Dónde está el proyecto hoy
+        </Reveal>
 
         <div ref={ref} className="relative mt-16 pl-8">
           <div className="absolute left-[3px] top-1 h-[calc(100%-1rem)] w-px bg-chalk/10" />

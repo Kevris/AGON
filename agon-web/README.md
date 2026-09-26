@@ -37,22 +37,36 @@ src/
 ├── lib/
 │   └── smoothScroll.ts  Lenis + GSAP ScrollTrigger sincronizados
 ├── components/
-│   ├── Preloader.tsx    trazo del cruce dibujándose antes de revelar el sitio
-│   ├── CustomCursor.tsx cursor con imán sobre elementos [data-magnetic]
-│   ├── Grain.tsx        textura de grano cinematográfico (overlay fijo)
-│   ├── Nav.tsx          barra superior
-│   ├── Hero.tsx         wordmark AGON con revelado y fondo ambiental
-│   ├── Ambient.tsx      reflector + brasas ascendiendo (fondo del hero)
-│   ├── HowItWorks.tsx   qué es + recorrido del modelo + demo de Tie
-│   ├── ModelJourney.tsx recorrido pinneado League→...→MatchEvent con el scroll
-│   ├── TieDemo.tsx      simulador jugable del modelo Tie (ida/vuelta)
-│   ├── Architecture.tsx un proceso, no un enjambre — cifras reales del recorte
-│   ├── Principles.tsx   los 4 principios de arquitectura
-│   ├── Roadmap.tsx      estado del proyecto, línea de tiempo con scroll
+│   ├── Preloader.tsx      trazo del cruce dibujándose antes de revelar el sitio
+│   ├── CustomCursor.tsx   cursor con imán sobre elementos [data-magnetic]
+│   ├── Grain.tsx          textura de grano cinematográfico (overlay fijo)
+│   ├── ScrollProgress.tsx barra fina de progreso de scroll, fijada arriba
+│   ├── Reveal.tsx         revelado de títulos palabra por palabra (GSAP + ScrollTrigger)
+│   ├── Nav.tsx            barra superior con scroll-spy y scroll suave (Lenis)
+│   ├── Hero.tsx           wordmark AGON con revelado y fondo ambiental
+│   ├── Ambient.tsx        reflector con paralaje de cursor + brasas ascendiendo
+│   ├── Origin.tsx         scrollytelling: V3 → V4 abandonada → AGON, con chips animados por GSAP
+│   ├── HowItWorks.tsx     qué es + recorrido del modelo + demo de Tie + demo de MatchEvent
+│   ├── ModelJourney.tsx   recorrido pinneado League→...→MatchEvent con el scroll
+│   ├── TieDemo.tsx        simulador jugable del modelo Tie (ida/vuelta)
+│   ├── MatchEventDemo.tsx acta jugable: corregir un gol agrega event_reverted, no borra nada
+│   ├── Architecture.tsx   un proceso, no un enjambre — cifras reales del recorte
+│   ├── Principles.tsx     los 4 principios de arquitectura
+│   ├── Roadmap.tsx        estado del proyecto, línea de tiempo con scroll
 │   └── Footer.tsx
 ├── App.tsx
-└── index.css            Tailwind + estilos base + grano
+└── index.css              Tailwind + estilos base + grano
 ```
+
+`Reveal` se usa en los `<h2>` de la mayoría de las secciones para el efecto de
+revelado por palabra; si agregás una sección nueva con título, envolvé el
+texto en `<Reveal as="h2" className="...">Tu título</Reveal>` en vez de un
+`<h2>` normal para mantener el mismo lenguaje visual.
+
+`scrollToHash("#id")`, exportado desde `lib/smoothScroll.ts`, hace scroll
+suave usando la instancia activa de Lenis (con fallback nativo si Lenis no
+está montado o el usuario prefiere movimiento reducido). Usalo en cualquier
+link interno nuevo en vez de dejar que el navegador salte de golpe.
 
 Elementos interactivos llevan `data-magnetic` para que `CustomCursor` los detecte;
 si agregás un botón o link nuevo y querés que el cursor reaccione, agregá el
