@@ -96,10 +96,11 @@ model Season {
   endedAt    DateTime?
 
   modality       Modality        @relation(fields: [modalityId], references: [id])
-  competitions   Competition[]
-  participants   Participant[]
-  awards         Award[]
-  transferOffers TransferOffer[]
+  competitions    Competition[]
+  participants    Participant[]
+  awards          Award[]
+  transferOffers  TransferOffer[]
+  teamNameHistory TeamNameHistory[]
 
   @@unique([modalityId, name])
   @@index([modalityId])
@@ -145,10 +146,35 @@ model Team {
   championTitles          Competition[]  @relation("Champion")
   transferOffers          TransferOffer[]
   matchEventSnapshots     MatchEvent[]   @relation("MatchEventTeamSnapshot")
+  nameHistory             TeamNameHistory[]
+  wildcardUsages          WildcardUsage[]
 
   @@unique([modalityId, name])
   @@index([modalityId])
   @@map("teams")
+}
+
+/// Qué nombre/abreviación tenía el equipo durante qué temporada. Ya pasó
+/// en la liga real: un equipo se llamó "Tachira" en la Temporada 1 y
+/// "Walts" en la Temporada 2, y hoy el historial de la Temporada 1
+/// muestra "Walts" porque `Team.name` se pisa sin dejar rastro. Distinto
+/// del caso de `Player.recentNicks` (ayuda de UX): esto es un registro
+/// histórico oficial — las consultas sobre temporadas pasadas deben
+/// resolver el nombre contra ESTA tabla, nunca contra `Team.name` en
+/// vivo. (Auditoría externa §6.6 — confirmado con caso real, prioridad alta.)
+model TeamNameHistory {
+  id           Int    @id @default(autoincrement())
+  teamId       Int
+  seasonId     Int
+  name         String
+  abbreviation String
+
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  season Season @relation(fields: [seasonId], references: [id])
+
+  @@unique([teamId, seasonId])
+  @@index([teamId])
+  @@map("team_name_history")
 }
 
 model Player {
@@ -156,7 +182,15 @@ model Player {
   discordId  String   @unique
   username   String
   globalName String?
-  createdAt  DateTime @default(now())
+
+  /// Últimos 3 apodos conocidos, más nuevo primero. Alcanza para sugerir
+  /// por historial al cargar stats a mano — no hace falta una tabla de
+  /// auditoría completa con timestamps (eso sí lo es para MatchEvent,
+  /// donde la trazabilidad importa; acá es solo una ayuda de UX).
+  /// (Auditoría externa §6.1 — versión simplificada, confirmada.)
+  recentNicks String[] @default([])
+
+  createdAt DateTime @default(now())
 
   participants    Participant[]
   awardWinners    AwardWinner[]
@@ -250,6 +284,16 @@ model Competition {
   campeonId Int?
   createdAt DateTime @default(now())
 
+  /// Versión de la FORMA de `settings`. Sin esto, cuando el JSON crece
+  /// (ej. se agrega `tiebreak_order` el día de mañana), las competencias
+  /// viejas quedan con una forma vieja y código nuevo puede leer
+  /// `undefined` en silencio en vez de fallar ruidoso. `normalizeSettings
+  /// (raw, version)` en el dominio traduce formas viejas a la actual al
+  /// leer — no hace falta migrar datos en masa cada vez que el contrato
+  /// crece. (Hallazgo de la auditoría externa, §2.F — barato ahora, caro
+  /// de agregar después con historia real encima.)
+  settingsVersion Int @default(1)
+
   season            Season                       @relation(fields: [seasonId], references: [id])
   campeon           Team?                        @relation("Champion", fields: [campeonId], references: [id])
   participants      CompetitionParticipant[]
@@ -259,6 +303,7 @@ model Competition {
   championRoster    CompetitionChampionRoster[]
   statProjections   PlayerStatProjection[]
   manualAdjustments ManualStatAdjustment[]
+  wildcardUsages    WildcardUsage[]
 
   @@unique([seasonId, name])
   @@index([seasonId])
@@ -327,9 +372,11 @@ model Tie {
   createdAt     DateTime      @default(now())
 
   competition Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
-  teamA       Team        @relation("TieTeamA", fields: [teamAId], references: [id])
-  teamB       Team        @relation("TieTeamB", fields: [teamBId], references: [id])
-  winner      Team?       @relation("TieWinner", fields: [winnerTeamId], references: [id])
+  /// Restrict explícito, no default implícito (auditoría externa §2G):
+  /// nunca debería poder borrarse un Team con historial de cruces.
+  teamA       Team        @relation("TieTeamA", fields: [teamAId], references: [id], onDelete: Restrict)
+  teamB       Team        @relation("TieTeamB", fields: [teamBId], references: [id], onDelete: Restrict)
+  winner      Team?       @relation("TieWinner", fields: [winnerTeamId], references: [id], onDelete: Restrict)
   matches     Match[]
 
   @@index([competitionId, round])
@@ -396,9 +443,11 @@ model Match {
 
   competition Competition  @relation(fields: [competitionId], references: [id])
   tie         Tie?         @relation(fields: [tieId], references: [id])
-  homeTeam    Team         @relation("HomeTeam", fields: [homeTeamId], references: [id])
-  awayTeam    Team         @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  /// Restrict explícito (auditoría externa §2G) — un Team con partidos no se borra.
+  homeTeam    Team            @relation("HomeTeam", fields: [homeTeamId], references: [id], onDelete: Restrict)
+  awayTeam    Team            @relation("AwayTeam", fields: [awayTeamId], references: [id], onDelete: Restrict)
   events      MatchEvent[]
+  wildcardUsages WildcardUsage[]
 
   @@unique([competitionId, homeTeamId, awayTeamId, round, leg], name: "uq_match_competition_teams_round_leg")
   @@index([competitionId])
@@ -408,6 +457,19 @@ model Match {
   @@index([competitionId, roundType])
   @@index([competitionId, round])
   @@map("matches")
+}
+
+/// Períodos de un partido — la granularidad a la que el motor de replay
+/// puede reportar posición y minutos jugados por separado (alguien puede
+/// jugar de GK el 1er tiempo y de MID el 2do). Distinto de
+/// `MatchSegmentKind` en V3, que describe la CALIDAD de detección del
+/// motor (entrenamiento/lag/irregular) — esto es sobre EN QUÉ PARTE del
+/// partido, no qué tan confiable fue la detección.
+enum MatchPeriod {
+  first_half
+  second_half
+  extra_time
+  penalties
 }
 
 enum MatchEventType {
@@ -420,6 +482,13 @@ enum MatchEventType {
   /// encontramos revisando V3: `statsHelper.ts` (carga manual) nunca tuvo
   /// este concepto, solo `autoStats.ts` (replays) lo calculaba, y encima
   /// sin persistirlo cuando no había otras stats.
+  ///
+  /// UN EVENTO POR PARTICIPANTE Y POR PERÍODO, no uno por partido entero
+  /// (ver `period`/`positionPlayed` abajo) — el motor de replay ya
+  /// detecta que alguien puede jugar de GK el 1er tiempo y de MID el
+  /// 2do; guardar un solo appearance por partido pierde ese detalle
+  /// desde el día uno, sin forma de reconstruirlo después. (Auditoría
+  /// externa §6.3 — confirmado con forma concreta.)
   appearance
   goal
   assist
@@ -447,6 +516,13 @@ model MatchEvent {
   value  Float @default(1)
   order  Int
 
+  /// Solo poblados cuando type = appearance. period = en qué parte del
+  /// partido; positionPlayed = qué posición jugó EN ESE período
+  /// (independiente de Participant.position, que es la posición "de
+  /// planilla" para toda la temporada).
+  period         MatchPeriod?
+  positionPlayed Position?
+
   /// Opaco — ej. messageId de Discord. null si no aplica.
   sourceRef String?
   createdBy String?
@@ -455,8 +531,10 @@ model MatchEvent {
   createdAt     DateTime @default(now())
 
   match       Match        @relation(fields: [matchId], references: [id], onDelete: Cascade)
-  participant Participant? @relation(fields: [participantId], references: [id])
-  team        Team         @relation("MatchEventTeamSnapshot", fields: [teamId], references: [id])
+  /// Restrict explícito (auditoría externa §2G) — un Participant con
+  /// eventos registrados no se borra (es historial, no estado mutable).
+  participant Participant? @relation(fields: [participantId], references: [id], onDelete: Restrict)
+  team        Team         @relation("MatchEventTeamSnapshot", fields: [teamId], references: [id], onDelete: Restrict)
   targetEvent MatchEvent?  @relation("EventRevert", fields: [targetEventId], references: [id])
   reverts     MatchEvent[] @relation("EventRevert")
 
@@ -576,6 +654,31 @@ model CompetitionChampionRoster {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// COMODINES (WILDCARDS)
+// ═══════════════════════════════════════════════════════════════════════
+
+/// Lo que un equipo usa para aplazar un partido (acuerdo entre DTs,
+/// gestionado por staff — no automatizado). El cupo por defecto vive en
+/// `Competition.settings` (`wildcards_por_equipo`, ej. 3); esto es solo
+/// el registro de consumo, para responder "¿cuántos le quedan al equipo
+/// X?" sin que el staff lo lleve a mano. (Auditoría externa §6.4.)
+model WildcardUsage {
+  id            Int      @id @default(autoincrement())
+  competitionId Int
+  teamId        Int
+  matchId       Int?
+  usedAt        DateTime @default(now())
+  actorId       String?
+
+  competition Competition @relation(fields: [competitionId], references: [id])
+  team        Team        @relation(fields: [teamId], references: [id])
+  match       Match?      @relation(fields: [matchId], references: [id])
+
+  @@index([competitionId, teamId])
+  @@map("wildcard_usages")
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 // MERCADO DE FICHAJES
 // ═══════════════════════════════════════════════════════════════════════
 
@@ -624,6 +727,24 @@ model TransferOffer {
 // ═══════════════════════════════════════════════════════════════════════
 // AUDITORÍA
 // ═══════════════════════════════════════════════════════════════════════
+
+// ═══════════════════════════════════════════════════════════════════════
+// PENDIENTE: constraints CHECK vía migración SQL manual
+// ═══════════════════════════════════════════════════════════════════════
+//
+// Prisma no tiene sintaxis nativa para CHECK constraints (auditoría
+// externa §2B) — van a mano en el .sql de la migración que crea estas
+// tablas, después de correr `prisma migrate dev`:
+//
+//   ALTER TABLE matches ADD CONSTRAINT chk_match_teams_differ
+//     CHECK (home_team_id <> away_team_id);
+//   ALTER TABLE ties ADD CONSTRAINT chk_tie_teams_differ
+//     CHECK (team_a_id <> team_b_id);
+//
+// Barato (10 minutos), y es la última línea de defensa que no depende de
+// que el código de dominio se acuerde de validarlo — importa más cuanto
+// más código nuevo (de sesiones distintas) vaya a tocar esto con el
+// tiempo.
 
 model AuditLog {
   id         Int      @id @default(autoincrement())
